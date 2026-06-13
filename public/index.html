@@ -368,7 +368,7 @@ async function loadSessions(){
 async function loadSessionHistory(){
   try{
     const rows=await api('/api/sessions');
-    document.getElementById('hist-body').innerHTML=rows.slice(0,20).map(s=>`<tr><td style="font-size:13px">${(s.session_date||'').toString().slice(0,10)}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used}</td><td><span class="badge badge-green">เสร็จแล้ว</span></td></tr>`).join('');
+    document.getElementById('hist-body').innerHTML=rows.slice(0,3).map(s=>`<tr><td style="font-size:13px">${(s.session_date||'').toString().slice(0,10)}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used}</td><td><span class="badge badge-green">เสร็จแล้ว</span></td></tr>`).join('');
     if(!charts.sessionHistChart){
       const labels=[],vals=[];for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);const iso=getLocalDate(dt);vals.push(rows.filter(r=>(r.session_date||'').toString().slice(0,10)===iso).length);}
       charts.sessionHistChart=new Chart(document.getElementById('sessionHistChart'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'rgba(232,93,38,.6)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},stepSize:1}}}}});
@@ -401,7 +401,7 @@ function buildCalendar(bookings){
   for(let d=1;d<=lastDay.getDate();d++){const dt=new Date(calYear,calMonth-1,d);cells.push({day:d,other:false,iso:getLocalDate(dt)});}
   while(cells.length%7!==0){const e=cells.length-lastDay.getDate()-startDow+1;const dt=new Date(calYear,calMonth,e);cells.push({day:dt.getDate(),other:true,iso:getLocalDate(dt)});}
   const dc=['#e85d26','#2563b0','#2a7d4f','#b86e00','#6d3fa0'];const todayIso=today.toISOString().split('T')[0];
-  grid.innerHTML=cells.map(c=>{const isT=c.iso===todayIso;const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);const dots=evts.slice(0,20).map((e,j)=>`<div class="cal-dot" style="background:${dc[j]}22;color:${dc[j]}">${String(e.booking_time||'').slice(0,5)} ${e.fname}</div>`).join('');return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;}).join('');
+  grid.innerHTML=cells.map(c=>{const isT=c.iso===todayIso;const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);const dots=evts.map((e,j)=>`<div class="cal-dot" style="background:${dc[j]}22;color:${dc[j]}">${String(e.booking_time||'').slice(0,5)} ${e.fname}</div>`).join('');return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;}).join('');
 }
 
 async function submitBooking(){
