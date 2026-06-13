@@ -401,7 +401,7 @@ function buildCalendar(bookings){
   for(let d=1;d<=lastDay.getDate();d++){const dt=new Date(calYear,calMonth-1,d);cells.push({day:d,other:false,iso:getLocalDate(dt)});}
   while(cells.length%7!==0){const e=cells.length-lastDay.getDate()-startDow+1;const dt=new Date(calYear,calMonth,e);cells.push({day:dt.getDate(),other:true,iso:getLocalDate(dt)});}
   const dc=['#e85d26','#2563b0','#2a7d4f','#b86e00','#6d3fa0'];const todayIso=today.toISOString().split('T')[0];
-  grid.innerHTML=cells.map(c=>{const isT=c.iso===todayIso;const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);const dots=evts.slice(0,3).map((e,j)=>`<div class="cal-dot" style="background:${dc[j]}22;color:${dc[j]}">${String(e.booking_time||'').slice(0,5)} ${e.fname}</div>`).join('');return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;}).join('');
+  grid.innerHTML=cells.map(c=>{const isT=c.iso===todayIso;const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);const dots=evts.slice(0,20).map((e,j)=>`<div class="cal-dot" style="background:${dc[j]}22;color:${dc[j]}">${String(e.booking_time||'').slice(0,5)} ${e.fname}</div>`).join('');return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;}).join('');
 }
 
 async function submitBooking(){
