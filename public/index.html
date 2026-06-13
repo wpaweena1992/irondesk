@@ -288,6 +288,9 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 
 <script>
 const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
+    function getLocalDate(date = new Date()) {
+        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+    }
 async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});const data=await res.json();if(!res.ok)throw new Error(data.error||'เกิดข้อผิดพลาด');return data;}
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน']};
@@ -314,11 +317,11 @@ async function loadDashboard(){
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">แพ็กเกจใกล้หมด</div><div class="kpi-val">${d.expiring_members} <span class="kpi-unit">ราย</span></div><div class="kpi-sub">ต้องต่ออายุเร็วๆนี้</div></div>`;
     const alertColors={expiring:['amber','ti-clock-exclamation','var(--amber-lt)'],expired:['red','ti-calendar-x','var(--red-lt)']};
     document.getElementById('dash-alerts').innerHTML=d.alerts.length?d.alerts.map(a=>{const[c,ic,bg]=alertColors[a.status]||['blue','ti-info-circle','var(--blue-lt)'];const hl=a.hours_left!=null?` — เหลือ ${a.hours_left} ชม.`:'';return`<div class="alert-item" style="background:${bg}"><i class="ti ${ic} alert-icon" style="color:var(--${c})"></i><div><div style="font-weight:500;font-size:13px">${a.fname} ${a.lname}${hl}</div><div style="font-size:11px;color:var(--muted)">${a.pkg_name} · หมด ${a.expiry_date}</div></div></div>`;}).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">ไม่มีการแจ้งเตือน ✓</div>';
-    const todaySessions=await api('/api/sessions?date='+new Date().toISOString().split('T')[0]);
+    const todaySessions=await api('/api/sessions?date='+getLocalDate());
     const sb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':'badge-blue">นัดไว้';
     document.getElementById('dash-sessions').innerHTML=todaySessions.length?todaySessions.slice(0,6).map(s=>`<div class="session-row"><div style="flex:1"><div class="session-name">${s.fname} ${s.lname}</div><div class="session-meta">${s.type} · ${s.trainer_name||'—'} · ${s.topic||''}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(s.status)}</span><span style="font-size:12px;color:var(--muted)">${String(s.session_time||'').slice(0,5)}</span></div></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">ยังไม่มีเซสชั่นวันนี้</div>';
     const labels=[],vals=[];
-    for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=dt.toISOString().split('T')[0];const found=d.revenue7.find(r=>(r.day||'').toString().slice(0,10)===iso);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);vals.push(found?Number(found.total):0);}
+    for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=getLocalDate(dt);const found=d.revenue7.find(r=>(r.day||'').toString().slice(0,10)===iso);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);vals.push(found?Number(found.total):0);}
     destroyChart('revenueChart');
     charts.revenueChart=new Chart(document.getElementById('revenueChart'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:vals.map((_,i)=>i===6?'#e85d26':'rgba(232,93,38,.25)'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},callback:v=>'฿'+v.toLocaleString()}}}}});
     destroyChart('pkgChart');
@@ -347,7 +350,7 @@ async function loadPackages(){
     const colors={PT_hours:'var(--orange)',monthly:'var(--blue)',class_sessions:'var(--green)',bundle:'var(--purple)'};
     document.getElementById('pkg-grid').innerHTML=pkgs.map(p=>`<div class="card" style="border-top:3px solid ${colors[p.type]||'var(--orange)'}"><div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">${p.name}</div><div style="font-size:13px;color:var(--muted);margin-bottom:12px">${p.description||''}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:${colors[p.type]||'var(--orange)'}">฿${Number(p.price).toLocaleString()}</div><div style="font-size:11px;color:var(--muted);margin-bottom:12px">หมดอายุ ${p.validity_days} วัน${p.hours?` · ${p.hours} ชม.`:''}${p.sessions?` · ${p.sessions} ครั้ง`:''}</div><div style="font-size:12px;color:var(--muted)">ใช้งาน <b style="color:var(--text)">${p.member_count}</b> สมาชิก</div></div>`).join('')+`<div class="card" style="border:2px dashed var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;min-height:160px" onclick="openModal('modal-package')"><i class="ti ti-plus" style="font-size:24px;color:var(--faint)"></i><span style="font-size:13px;color:var(--muted)">เพิ่มแพ็กเกจใหม่</span></div>`;
   }catch(e){toast(e.message,true);}
-}
+}-
 
 async function submitPackage(){
   const name=document.getElementById('np-name').value.trim();const price=document.getElementById('np-price').value;if(!name||!price){toast('กรุณากรอกชื่อและราคา',true);return;}
@@ -356,7 +359,7 @@ async function submitPackage(){
 
 async function loadSessions(){
   try{
-    const today=new Date().toISOString().split('T')[0];const rows=await api('/api/sessions?date='+today);
+    const today=getLocalDate();const rows=await api('/api/sessions?date='+today);
     const sb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':'badge-blue">นัดไว้';
     document.getElementById('sessions-body').innerHTML=rows.length?rows.map(s=>`<tr><td style="font-weight:600">${String(s.session_time||'').slice(0,5)}</td><td><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic||''}</div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td><span class="badge ${sb(s.status)}</span></td><td>${s.status==='upcoming'||s.status==='active'?`<button class="btn btn-orange btn-sm" onclick="markDone(${s.id},this)"><i class="ti ti-check"></i>เสร็จ</button>`:''}</td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
   }catch(e){toast(e.message,true);}
@@ -367,7 +370,7 @@ async function loadSessionHistory(){
     const rows=await api('/api/sessions');
     document.getElementById('hist-body').innerHTML=rows.slice(0,20).map(s=>`<tr><td style="font-size:13px">${(s.session_date||'').toString().slice(0,10)}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used}</td><td><span class="badge badge-green">เสร็จแล้ว</span></td></tr>`).join('');
     if(!charts.sessionHistChart){
-      const labels=[],vals=[];for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);const iso=dt.toISOString().split('T')[0];vals.push(rows.filter(r=>(r.session_date||'').toString().slice(0,10)===iso).length);}
+      const labels=[],vals=[];for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);const iso=getLocalDate(dt);vals.push(rows.filter(r=>(r.session_date||'').toString().slice(0,10)===iso).length);}
       charts.sessionHistChart=new Chart(document.getElementById('sessionHistChart'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'rgba(232,93,38,.6)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},stepSize:1}}}}});
     }
   }catch(e){toast(e.message,true);}
@@ -395,8 +398,8 @@ function buildCalendar(bookings){
   const firstDay=new Date(calYear,calMonth-1,1);const lastDay=new Date(calYear,calMonth,0);
   const startDow=firstDay.getDay()===0?6:firstDay.getDay()-1;const cells=[];
   for(let i=0;i<startDow;i++){const d=new Date(calYear,calMonth-1,-startDow+i+1);cells.push({day:d.getDate(),other:true,iso:d.toISOString().split('T')[0]});}
-  for(let d=1;d<=lastDay.getDate();d++){const dt=new Date(calYear,calMonth-1,d);cells.push({day:d,other:false,iso:dt.toISOString().split('T')[0]});}
-  while(cells.length%7!==0){const e=cells.length-lastDay.getDate()-startDow+1;const dt=new Date(calYear,calMonth,e);cells.push({day:dt.getDate(),other:true,iso:dt.toISOString().split('T')[0]});}
+  for(let d=1;d<=lastDay.getDate();d++){const dt=new Date(calYear,calMonth-1,d);cells.push({day:d,other:false,iso:getLocalDate(dt)});}
+  while(cells.length%7!==0){const e=cells.length-lastDay.getDate()-startDow+1;const dt=new Date(calYear,calMonth,e);cells.push({day:dt.getDate(),other:true,iso:getLocalDate(dt)});}
   const dc=['#e85d26','#2563b0','#2a7d4f','#b86e00','#6d3fa0'];const todayIso=today.toISOString().split('T')[0];
   grid.innerHTML=cells.map(c=>{const isT=c.iso===todayIso;const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);const dots=evts.slice(0,3).map((e,j)=>`<div class="cal-dot" style="background:${dc[j]}22;color:${dc[j]}">${String(e.booking_time||'').slice(0,5)} ${e.fname}</div>`).join('');return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;}).join('');
 }
@@ -415,7 +418,7 @@ async function loadPayments(){
       <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">รายรับเฉลี่ย/วัน</div><div class="kpi-val">${Math.round(d.month_total/new Date().getDate()).toLocaleString()} <span class="kpi-unit">฿</span></div></div>`;
     const ml={transfer:'โอน',cash:'เงินสด',credit_card:'บัตรเครดิต',qr:'QR'};
     document.getElementById('pay-list').innerHTML=d.rows.slice(0,8).map(p=>`<div class="session-row"><div style="flex:1"><div class="session-name">${p.fname} ${p.lname}${p.pkg_name?' — '+p.pkg_name:''}</div><div class="session-meta">${(p.payment_date||'').toString().slice(0,10)} · ${ml[p.method]||p.method}</div></div><div style="font-weight:600;color:var(--green)">+฿${Number(p.amount).toLocaleString()}</div></div>`).join('');
-    const days30=[],vals30=[];for(let i=29;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=dt.toISOString().split('T')[0];const found=d.monthly30.find(r=>(r.day||'').toString().slice(0,10)===iso);days30.push(i%5===0?dt.getDate()+'/'+(dt.getMonth()+1):'');vals30.push(found?Number(found.total):0);}
+    const days30=[],vals30=[];for(let i=29;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=getLocalDate(dt);const found=d.monthly30.find(r=>(r.day||'').toString().slice(0,10)===iso);days30.push(i%5===0?dt.getDate()+'/'+(dt.getMonth()+1):'');vals30.push(found?Number(found.total):0);}
     destroyChart('payChart');charts.payChart=new Chart(document.getElementById('payChart'),{type:'line',data:{labels:days30,datasets:[{data:vals30,borderColor:'#e85d26',backgroundColor:'rgba(232,93,38,.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},callback:v=>'฿'+v.toLocaleString()}}}}});
   }catch(e){toast(e.message,true);}
 }
@@ -445,7 +448,7 @@ async function checkHealth(){
 }
 
 // INIT
-const todayStr=new Date().toISOString().split('T')[0];
+const todayStr=getLocalDate();
 ['s-date','b-date','p-date','m-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr;});
 updateCalLabel();
 document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
