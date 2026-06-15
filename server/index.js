@@ -291,6 +291,14 @@ app.put('/api/sessions/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// เพิ่มโค้ดนี้ในไฟล์ index.js เพื่อให้ Backend รับคำสั่ง DELETE ได้
+app.delete('/api/sessions/:id', async (req, res) => {
+  try {
+    await db.query(`DELETE FROM sessions WHERE id=$1`, [req.params.id]);
+    res.json({ message: 'ลบเซสชั่นสำเร็จ' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── BOOKINGS ──────────────────────────────────────────
 app.get('/api/bookings', async (req, res) => {
   try {
