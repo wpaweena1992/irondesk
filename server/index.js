@@ -156,6 +156,19 @@ app.post('/api/packages', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+app.delete('/api/packages/:id', async (req, res) => {
+    const { id } = req.params; // ดักจับไอดีจาก URL
+    try {
+        // โค้ดสั่งลบในฐานข้อมูล
+        await db.query('DELETE FROM packages WHERE id = $1', [id]);
+        res.json({ success: true, message: 'ลบแพ็กเกจสำเร็จ' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'ไม่สามารถลบได้เนื่องจากพังหรือติด Foreign Key' });
+    }
+});
+
+
 // ── SESSIONS ──────────────────────────────────────────
 app.get('/api/sessions', async (req, res) => {
   try {
