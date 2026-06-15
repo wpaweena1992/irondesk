@@ -71,10 +71,12 @@ app.get('/api/members', async (req, res) => {
   try {
     const { q, status } = req.query;
     let sql = `
-      SELECT m.id, m.fname, m.lname, m.phone, m.email, m.color,
+      SELECT m.id, m.fname, m.lname, m.phone, m.email, m.color, m.goal,
+             m.trainer_id, m.created_at,
              t.name AS trainer_name,
-             mp.id AS mp_id, p.name AS pkg_name, p.type AS pkg_type,
+             mp.id AS mp_id, mp.package_id, p.name AS pkg_name, p.type AS pkg_type,
              mp.hours_total, mp.hours_used, mp.sessions_total, mp.sessions_used,
+             mp.start_date::text AS start_date,
              mp.expiry_date::text AS expiry_date, mp.status, mp.paid
       FROM members m
       LEFT JOIN trainers t ON t.id = m.trainer_id
@@ -124,6 +126,49 @@ app.post('/api/members', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ✅ PUT — แก้ไขสมาชิก
+app.put('/api/members/:id', async (req, res) => {
+  try {
+    const { fname, lname, phone, email, trainer_id, package_id, start_date, goal } = req.body;
+    if (!fname || !phone) return res.status(400).json({ error: 'fname และ phone จำเป็น' });
+
+    await db.query(
+      `UPDATE members SET fname=$1, lname=$2, phone=$3, email=$4, trainer_id=$5, goal=$6 WHERE id=$7`,
+      [fname, lname||'', phone, email||null, trainer_id||null, goal||null, req.params.id]
+    );
+
+    // อัปเดตแพ็กเกจถ้ามีการเลือก
+    if (package_id && start_date) {
+      const [pkg] = await db.query(`SELECT * FROM packages WHERE id=$1`, [package_id]);
+      if (pkg) {
+        const expiry = new Date(start_date);
+        expiry.setDate(expiry.getDate() + pkg.validity_days);
+
+        // ตรวจสอบว่ามี member_package อยู่แล้วไหม
+        const [existing] = await db.query(
+          `SELECT id FROM member_packages WHERE member_id=$1 ORDER BY created_at DESC LIMIT 1`,
+          [req.params.id]
+        );
+
+        if (existing) {
+          await db.query(
+            `UPDATE member_packages SET package_id=$1, hours_total=$2, sessions_total=$3, start_date=$4, expiry_date=$5, status='active' WHERE id=$6`,
+            [package_id, pkg.hours||null, pkg.sessions||null, start_date, expiry.toISOString().split('T')[0], existing.id]
+          );
+        } else {
+          await db.query(
+            `INSERT INTO member_packages (member_id,package_id,hours_total,hours_used,sessions_total,sessions_used,start_date,expiry_date,paid,status) VALUES ($1,$2,$3,0,$4,0,$5,$6,FALSE,'active')`,
+            [req.params.id, package_id, pkg.hours||null, pkg.sessions||null, start_date, expiry.toISOString().split('T')[0]]
+          );
+        }
+      }
+    }
+
+    res.json({ message: 'แก้ไขสมาชิกสำเร็จ' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ✅ DELETE — ลบสมาชิก (soft delete)
 app.delete('/api/members/:id', async (req, res) => {
   try {
     await db.query(`UPDATE members SET active=FALSE WHERE id=$1`, [req.params.id]);
@@ -156,18 +201,26 @@ app.post('/api/packages', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/packages/:id', async (req, res) => {
-    const { id } = req.params; // ดักจับไอดีจาก URL
-    try {
-        // โค้ดสั่งลบในฐานข้อมูล
-        await db.query('DELETE FROM packages WHERE id = $1', [id]);
-        res.json({ success: true, message: 'ลบแพ็กเกจสำเร็จ' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'ไม่สามารถลบได้เนื่องจากพังหรือติด Foreign Key' });
-    }
+// ✅ PUT — แก้ไขแพ็กเกจ
+app.put('/api/packages/:id', async (req, res) => {
+  try {
+    const { name, type, price, hours, sessions, validity_days, description } = req.body;
+    if (!name || !price) return res.status(400).json({ error: 'name และ price จำเป็น' });
+    await db.query(
+      `UPDATE packages SET name=$1, type=$2, price=$3, hours=$4, sessions=$5, validity_days=$6, description=$7 WHERE id=$8`,
+      [name, type||'monthly', price, hours||null, sessions||null, validity_days||30, description||'', req.params.id]
+    );
+    res.json({ message: 'แก้ไขแพ็กเกจสำเร็จ' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ✅ DELETE — ลบแพ็กเกจ (soft delete)
+app.delete('/api/packages/:id', async (req, res) => {
+  try {
+    await db.query(`UPDATE packages SET active=FALSE WHERE id=$1`, [req.params.id]);
+    res.json({ message: 'ลบแพ็กเกจแล้ว' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
 
 // ── SESSIONS ──────────────────────────────────────────
 app.get('/api/sessions', async (req, res) => {
@@ -312,17 +365,7 @@ app.get('/api/trainers', async (req, res) => {
 // ── FRONTEND ──────────────────────────────────────────
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-// ── SERVER START ──────────────────────────────────────
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🏋️ IronDesk รันที่พอร์ต: ${PORT}`);
-  console.log(`🐘 PostgreSQL Connected!\n`);
-});
-
-// ดักจับเพื่อป้องกันเซิร์ฟเวอร์แครชหากพอร์ตชนกันช่วงสลับเวอร์ชันบน Render
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.log(`⚠️ แจ้งเตือน: พอร์ต ${PORT} มีโปรเซสอื่นเปิดอยู่ก่อนแล้ว แต่ระบบจะทำงานต่ออย่างปลอดภัยครับ`);
-  } else {
-    throw error;
-  }
+app.listen(PORT, () => {
+  console.log(`\n🏋️  IronDesk รันที่ http://localhost:${PORT}`);
+  console.log(`🐘  PostgreSQL: ${process.env.DATABASE_URL?.split('@')[1] || 'local'}\n`);
 });
