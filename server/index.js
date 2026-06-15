@@ -299,8 +299,17 @@ app.get('/api/trainers', async (req, res) => {
 // ── FRONTEND ──────────────────────────────────────────
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-// ใส่ '0.0.0.0' เพิ่มเข้าไปหลัง PORT
-app.listen(PORT, '0.0.0.0', () => {
+// เปลี่ยนโค้ด app.listen ท้ายไฟล์ให้เป็นแบบนี้ครับ
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🏋️  IronDesk รันที่ พอร์ต: ${PORT}`);
   console.log(`🐘  PostgreSQL Connected!\n`);
+});
+
+// เพิ่มโค้ดดักจับ Error พอร์ตชน (Ghost Process) ไว้ตรงนี้
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.log(`⚠️  แจ้งเตือน: พอร์ต ${PORT} มีโปรเซสอื่นเปิดอยู่ก่อนแล้ว แต่ระบบจะทำงานต่อครับ`);
+  } else {
+    throw error;
+  }
 });
