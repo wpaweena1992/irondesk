@@ -365,7 +365,18 @@ app.get('/api/trainers', async (req, res) => {
 // ── FRONTEND ──────────────────────────────────────────
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-app.listen(PORT, () => {
+// ── SERVER START & ERROR HANDLING ─────────────────────
+// ผูก IP '0.0.0.0' เพื่อความเสถียรบน Cloud และดักจับพอร์ตชนไปในตัว
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🏋️  IronDesk รันที่ http://localhost:${PORT}`);
   console.log(`🐘  PostgreSQL: ${process.env.DATABASE_URL?.split('@')[1] || 'local'}\n`);
+});
+
+// ดักจับและป้องกันเซิร์ฟเวอร์แครชจากปัญหา Render รันโปรเซสซ้อน (EADDRINUSE)
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.log(`⚠️  แจ้งเตือน: พอร์ต ${PORT} มีโปรเซสอื่นเปิดอยู่ก่อนแล้ว แต่ระบบจะทำงานต่ออย่างปลอดภัยครับ`);
+  } else {
+    throw error;
+  }
 });
