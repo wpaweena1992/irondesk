@@ -135,6 +135,11 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .db-ok{background:var(--green-lt);color:var(--green)}
 .db-err{background:var(--red-lt);color:var(--red)}
 .db-checking{background:var(--surface2);color:var(--muted)}
+
+/* ── BLUR AMOUNTS ── */
+.blurred{filter:blur(6px);transition:filter .25s;user-select:none;pointer-events:none}
+.blurred-chart{filter:blur(8px);transition:filter .25s}
+
 @media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
@@ -172,6 +177,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div class="topbar-right">
       <div class="db-status db-checking" id="db-status"><i class="ti ti-database"></i><span>กำลังเชื่อมต่อ...</span></div>
       <button class="tb-btn hamburger-btn" onclick="openSidebar()"><i class="ti ti-menu-2"></i></button>
+      <!-- ปุ่มซ่อน/แสดงรายรับ — แสดงเฉพาะหน้า payments -->
+      <button class="tb-btn" id="btn-toggle-pay" style="display:none" onclick="toggleAmounts()">
+        <i class="ti ti-eye-off"></i><span id="btn-toggle-pay-label">ซ่อนยอด</span>
+      </button>
       <button class="tb-btn" onclick="openModal('modal-session')"><i class="ti ti-plus"></i>เพิ่มเซสชั่น</button>
       <button class="tb-btn primary" onclick="openModal('modal-member')"><i class="ti ti-user-plus"></i>เพิ่มสมาชิก</button>
     </div>
@@ -227,7 +236,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div id="page-payments" class="page">
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem" id="pay-kpis"><div class="page-spinner"><div class="spinner"></div></div></div>
       <div class="g2 mb">
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-line"></i>รายรับ 30 วัน</div></div><div style="position:relative;height:200px"><canvas id="payChart"></canvas></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-line"></i>รายรับ 30 วัน</div></div><div style="position:relative;height:200px" id="pay-chart-wrap"><canvas id="payChart"></canvas></div></div>
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-receipt"></i>รายรับล่าสุด</div></div><div id="pay-list"><div class="page-spinner"><div class="spinner"></div></div></div><button class="btn btn-orange btn-full" style="margin-top:12px" onclick="openModal('modal-payment')"><i class="ti ti-plus"></i>บันทึกรายรับ</button></div>
       </div>
     </div>
@@ -246,8 +255,6 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-member')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitMember()"><i class="ti ti-user-plus"></i>เพิ่มสมาชิก</button></div>
   </div>
 </div>
-
-<!-- Modal แก้ไข Member -->
 <div class="modal-backdrop" id="modal-edit-member">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">แก้ไขข้อมูลสมาชิก</div><button class="close-btn" onclick="closeModal('modal-edit-member')"><i class="ti ti-x"></i></button></div>
@@ -260,7 +267,6 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-member')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updateMember()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
   </div>
 </div>
-
 <div class="modal-backdrop" id="modal-session">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">บันทึกเซสชั่น</div><button class="close-btn" onclick="closeModal('modal-session')"><i class="ti ti-x"></i></button></div>
@@ -300,8 +306,6 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-package')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitPackage()"><i class="ti ti-plus"></i>เพิ่มแพ็กเกจ</button></div>
   </div>
 </div>
-
-<!-- Modal แก้ไข Package -->
 <div class="modal-backdrop" id="modal-edit-package">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">แก้ไขแพ็กเกจ</div><button class="close-btn" onclick="closeModal('modal-edit-package')"><i class="ti ti-x"></i></button></div>
@@ -313,8 +317,6 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-package')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updatePackage()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
   </div>
 </div>
-
-<!-- Modal ยืนยันลบ -->
 <div class="modal-backdrop" id="modal-confirm-delete">
   <div class="modal" style="max-width:380px">
     <div class="modal-head"><div class="modal-title" style="color:var(--red)"><i class="ti ti-alert-triangle"></i> ยืนยันการลบ</div><button class="close-btn" onclick="closeModal('modal-confirm-delete')"><i class="ti ti-x"></i></button></div>
@@ -327,11 +329,45 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 
 <script>
 const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
+let amountsHidden=false; // ← state ซ่อน/แสดง
+
 function getLocalDate(date=new Date()){return date.toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});}
 async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});const data=await res.json();if(!res.ok)throw new Error(data.error||'เกิดข้อผิดพลาด');return data;}
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน']};
-function nav(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');btn.classList.add('active');const[title,sub]=pageMeta[id]||[id,''];document.getElementById('page-title').textContent=title;document.getElementById('page-sub').textContent=sub;closeSidebar();loadPage(id);}
+
+function nav(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  const[title,sub]=pageMeta[id]||[id,''];
+  document.getElementById('page-title').textContent=title;
+  document.getElementById('page-sub').textContent=sub;
+  // แสดงปุ่มซ่อนยอดเฉพาะหน้า payments
+  document.getElementById('btn-toggle-pay').style.display=id==='payments'?'flex':'none';
+  closeSidebar();loadPage(id);
+}
+
+// ── TOGGLE AMOUNTS ────────────────────────────────────
+function toggleAmounts(){
+  amountsHidden=!amountsHidden;
+  const btn=document.getElementById('btn-toggle-pay');
+  const label=document.getElementById('btn-toggle-pay-label');
+  if(amountsHidden){
+    btn.querySelector('i').className='ti ti-eye';
+    label.textContent='แสดงยอด';
+  }else{
+    btn.querySelector('i').className='ti ti-eye-off';
+    label.textContent='ซ่อนยอด';
+  }
+  // blur/unblur ตัวเลขและกราฟ
+  document.querySelectorAll('.pay-amount').forEach(el=>{
+    el.classList.toggle('blurred',amountsHidden);
+  });
+  document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart',amountsHidden);
+}
+
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -545,12 +581,22 @@ async function submitBooking(){
 async function loadPayments(){
   try{
     const d=await api('/api/payments');
+    const b=amountsHidden?'blurred':''; // ← ใส่ class blur ถ้าซ่อนอยู่
     document.getElementById('pay-kpis').innerHTML=`
-      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val">${Number(d.month_total).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub">${d.rows.length} รายการ</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">รอชำระ</div><div class="kpi-val">${Number(d.pending_total).toLocaleString()} <span class="kpi-unit">฿</span></div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">รายรับเฉลี่ย/วัน</div><div class="kpi-val">${Math.round(d.month_total/new Date().getDate()).toLocaleString()} <span class="kpi-unit">฿</span></div></div>`;
+      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val pay-amount ${b}">${Number(d.month_total).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub pay-amount ${b}">${d.rows.length} รายการ</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">รอชำระ</div><div class="kpi-val pay-amount ${b}">${Number(d.pending_total).toLocaleString()} <span class="kpi-unit">฿</span></div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">รายรับเฉลี่ย/วัน</div><div class="kpi-val pay-amount ${b}">${Math.round(d.month_total/new Date().getDate()).toLocaleString()} <span class="kpi-unit">฿</span></div></div>`;
     const ml={transfer:'โอน',cash:'เงินสด',credit_card:'บัตรเครดิต',qr:'QR'};
-    document.getElementById('pay-list').innerHTML=d.rows.slice(0,8).map(p=>`<div class="session-row"><div style="flex:1"><div class="session-name">${p.fname} ${p.lname}${p.pkg_name?' — '+p.pkg_name:''}</div><div class="session-meta">${(p.payment_date||'').toString().slice(0,10)} · ${ml[p.method]||p.method}</div></div><div style="font-weight:600;color:var(--green)">+฿${Number(p.amount).toLocaleString()}</div></div>`).join('');
+    document.getElementById('pay-list').innerHTML=d.rows.slice(0,8).map(p=>`
+      <div class="session-row">
+        <div style="flex:1">
+          <div class="session-name">${p.fname} ${p.lname}${p.pkg_name?' — '+p.pkg_name:''}</div>
+          <div class="session-meta">${(p.payment_date||'').toString().slice(0,10)} · ${ml[p.method]||p.method}</div>
+        </div>
+        <div class="pay-amount ${b}" style="font-weight:600;color:var(--green)">+฿${Number(p.amount).toLocaleString()}</div>
+      </div>`).join('');
+    // blur chart ถ้าซ่อนอยู่
+    document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart',amountsHidden);
     const days30=[],vals30=[];for(let i=29;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=getLocalDate(dt);const found=d.monthly30.find(r=>(r.day||'').toString().slice(0,10)===iso);days30.push(i%5===0?dt.getDate()+'/'+(dt.getMonth()+1):'');vals30.push(found?Number(found.total):0);}
     destroyChart('payChart');charts.payChart=new Chart(document.getElementById('payChart'),{type:'line',data:{labels:days30,datasets:[{data:vals30,borderColor:'#e85d26',backgroundColor:'rgba(232,93,38,.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},callback:v=>'฿'+v.toLocaleString()}}}}});
   }catch(e){toast(e.message,true);}
