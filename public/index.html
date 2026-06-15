@@ -278,6 +278,21 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-session')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitSession()"><i class="ti ti-device-floppy"></i>บันทึกเซสชั่น</button></div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="modal-edit-session">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">แก้ไขเซสชั่น</div><button class="close-btn" onclick="closeModal('modal-edit-session')"><i class="ti ti-x"></i></button></div>
+    <input type="hidden" id="es-id">
+    <div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="es-type"><option value="PT">PT</option><option value="group_class">คลาสกลุ่ม</option><option value="checkin">เช็คอิน</option></select></div>
+    <div class="fgroup"><label class="flabel">เทรนเนอร์</label><select class="fselect" id="es-trainer"><option value="">— ไม่ระบุ —</option></select></div>
+    <div class="frow"><div class="fgroup"><label class="flabel">วันที่</label><input type="date" class="finput" id="es-date"></div><div class="fgroup"><label class="flabel">เวลา</label><input type="time" class="finput" id="es-time"></div></div>
+    <div class="fgroup"><label class="flabel">ชั่วโมงที่ใช้</label><input type="number" class="finput" id="es-hours" step="0.5" min="0.5"></div>
+    <div class="fgroup"><label class="flabel">หัวข้อ / โปรแกรม</label><input class="finput" id="es-topic"></div>
+    <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-session')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updateSession()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
+  </div>
+</div>
+
+
 <div class="modal-backdrop" id="modal-booking">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">จองนัดใหม่</div><button class="close-btn" onclick="closeModal('modal-booking')"><i class="ti ti-x"></i></button></div>
@@ -632,6 +647,47 @@ updateCalLabel();
 document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 checkHealth();
 populateSelects().then(()=>loadDashboard());
+
+async function openEditSession(id) {
+        // ดึงข้อมูลจากตัวแปร sessions ที่โหลดไว้ในหน้า page-sessions
+        const session = allSessions.find(s => s.id == id); 
+        if (!session) return;
+
+        document.getElementById('es-id').value = session.id;
+        document.getElementById('es-type').value = session.type;
+        document.getElementById('es-trainer').value = session.trainer_id || "";
+        document.getElementById('es-date').value = session.session_date;
+        document.getElementById('es-time').value = session.session_time;
+        document.getElementById('es-hours').value = session.hours_used;
+        document.getElementById('es-topic').value = session.topic;
+        
+        openModal('modal-edit-session');
+    }
+
+    async function updateSession() {
+        const id = document.getElementById('es-id').value;
+        const data = {
+            type: document.getElementById('es-type').value,
+            trainer_id: document.getElementById('es-trainer').value,
+            session_date: document.getElementById('es-date').value,
+            session_time: document.getElementById('es-time').value,
+            hours_used: parseFloat(document.getElementById('es-hours').value), // แก้ไขปัญหาทศนิยม
+            topic: document.getElementById('es-topic').value
+        };
+
+        const res = await fetch(`/api/sessions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+            closeModal('modal-edit-session');
+            loadSessions(); // เรียกฟังก์ชันโหลดตารางใหม่เพื่อให้ข้อมูลอัปเดต
+            showToast('แก้ไขเซสชั่นเรียบร้อย', 'success');
+        }
+    }
+
 </script>
 </body>
 </html>

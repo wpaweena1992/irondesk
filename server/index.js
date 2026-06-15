@@ -279,6 +279,18 @@ app.patch('/api/sessions/:id/done', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ✅ PUT — แก้ไขเซสชั่น
+app.put('/api/sessions/:id', async (req, res) => {
+  try {
+    const { trainer_id, type, topic, session_date, session_time, hours_used } = req.body;
+    await db.query(
+      `UPDATE sessions SET trainer_id=$1, type=$2, topic=$3, session_date=$4, session_time=$5, hours_used=$6 WHERE id=$7`,
+      [trainer_id || null, type, topic || '', session_date, session_time, hours_used, req.params.id]
+    );
+    res.json({ message: 'แก้ไขเซสชั่นสำเร็จ' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── BOOKINGS ──────────────────────────────────────────
 app.get('/api/bookings', async (req, res) => {
   try {
