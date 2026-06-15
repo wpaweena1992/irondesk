@@ -299,7 +299,8 @@ app.get('/api/trainers', async (req, res) => {
 // ── FRONTEND ──────────────────────────────────────────
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-app.listen(PORT, () => {
-  console.log(`\n🏋️  IronDesk รันที่ http://localhost:${PORT}`);
-  console.log(`🐘  PostgreSQL: ${process.env.DATABASE_URL?.split('@')[1] || 'local'}\n`);
+// ใส่ '0.0.0.0' เพิ่มเข้าไปหลัง PORT
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🏋️  IronDesk รันที่ พอร์ต: ${PORT}`);
+  console.log(`🐘  PostgreSQL Connected!\n`);
 });
