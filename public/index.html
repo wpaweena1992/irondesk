@@ -186,7 +186,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <div class="content">
     <div id="page-dashboard" class="page active">
       <div class="kpi-grid" id="dash-kpis"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
-      <div class="g3 mb">
+      <div class="g3 mb" style="display:none">
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>รายรับ 7 วัน</div></div><div style="position:relative;height:210px"><canvas id="revenueChart"></canvas></div></div>
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-bell-ringing"></i>แจ้งเตือน</div></div><div id="dash-alerts"><div class="page-spinner"><div class="spinner"></div></div></div></div>
       </div>
@@ -384,7 +384,7 @@ async function loadDashboard(){
     const d=await api('/api/dashboard');
     document.getElementById('dash-kpis').innerHTML=`
       <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">สมาชิกทั้งหมด</div><div class="kpi-val">${d.total_members} <span class="kpi-unit">คน</span></div><div class="kpi-sub">แอคทีฟ ${d.active_members} คน</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val">${Number(d.revenue_month).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub">ค้างชำระ ฿${Number(d.pending_amount).toLocaleString()}</div></div>
+      <div class="kpi" style="display:none"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val">${Number(d.revenue_month).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub">ค้างชำระ ฿${Number(d.pending_amount).toLocaleString()}</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">เซสชั่นวันนี้</div><div class="kpi-val">${d.sessions_today} <span class="kpi-unit">เซสชั่น</span></div><div class="kpi-sub">เสร็จแล้ว ${d.done_today} รายการ</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">แพ็กเกจใกล้หมด</div><div class="kpi-val">${d.expiring_members} <span class="kpi-unit">ราย</span></div><div class="kpi-sub">ต้องต่ออายุเร็วๆนี้</div></div>`;
     const alertColors={expiring:['amber','ti-clock-exclamation','var(--amber-lt)'],expired:['red','ti-calendar-x','var(--red-lt)']};
