@@ -113,14 +113,18 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .tab-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-header-cell{text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:6px 0}
-.cal-cell{min-height:70px;border:1px solid var(--border);border-radius:var(--r-sm);padding:5px;background:var(--surface);cursor:pointer;transition:border-color .15s}
+.cal-cell{min-height:70px;border:1px solid var(--border);border-radius:var(--r-sm);padding:5px;background:var(--surface);transition:border-color .15s}
 .cal-cell:hover{border-color:var(--border2)}
 .cal-cell.today{border-color:var(--orange)}
 .cal-cell.other-month{background:var(--surface2)}
 .cal-day-num{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
 .cal-cell.today .cal-day-num{color:var(--orange)}
 .cal-cell.other-month .cal-day-num{color:var(--faint)}
-.cal-dot{font-size:10px;padding:1px 4px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-dot{font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;gap:3px}
+.cal-dot.cancelled{text-decoration:line-through;opacity:.5;background:var(--surface3)!important;color:var(--muted)!important}
+.cal-dot-actions{display:flex;gap:2px;flex-shrink:0}
+.cal-dot-btn{border:none;background:rgba(0,0,0,.1);border-radius:3px;cursor:pointer;padding:1px 4px;font-size:10px;line-height:1.4;color:inherit;font-family:inherit}
+.cal-dot-btn:hover{background:rgba(0,0,0,.2)}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;border-radius:var(--r-lg);padding:11px 18px;font-size:13.5px;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(10px);transition:all .3s;z-index:9999;box-shadow:var(--shadow-md);max-width:320px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast i{font-size:18px}
@@ -135,11 +139,8 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .db-ok{background:var(--green-lt);color:var(--green)}
 .db-err{background:var(--red-lt);color:var(--red)}
 .db-checking{background:var(--surface2);color:var(--muted)}
-
-/* ── BLUR AMOUNTS ── */
 .blurred{filter:blur(6px);transition:filter .25s;user-select:none;pointer-events:none}
 .blurred-chart{filter:blur(8px);transition:filter .25s}
-
 @media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
@@ -162,7 +163,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <button class="nav-btn" onclick="nav('payments',this)"><i class="ti ti-credit-card"></i>รายรับ</button>
   <div class="sidebar-bottom">
     <div class="staff-chip">
-      <div class="staff-avatar">I</div>
+      <div class="staff-avatar">ส</div>
       <div><div class="staff-name">Issara Studio</div><div class="staff-role"></div></div>
     </div>
   </div>
@@ -177,10 +178,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div class="topbar-right">
       <div class="db-status db-checking" id="db-status"><i class="ti ti-database"></i><span>กำลังเชื่อมต่อ...</span></div>
       <button class="tb-btn hamburger-btn" onclick="openSidebar()"><i class="ti ti-menu-2"></i></button>
-      <!-- ปุ่มซ่อน/แสดงรายรับ — แสดงเฉพาะหน้า payments -->
-      <button class="tb-btn" id="btn-toggle-pay" style="display:none" onclick="toggleAmounts()">
-        <i class="ti ti-eye-off"></i><span id="btn-toggle-pay-label">ซ่อนยอด</span>
-      </button>
+      <button class="tb-btn" id="btn-toggle-pay" style="display:none" onclick="toggleAmounts()"><i class="ti ti-eye-off"></i><span id="btn-toggle-pay-label">ซ่อนยอด</span></button>
       <button class="tb-btn" onclick="openModal('modal-session')"><i class="ti ti-plus"></i>เพิ่มเซสชั่น</button>
       <button class="tb-btn primary" onclick="openModal('modal-member')"><i class="ti ti-user-plus"></i>เพิ่มสมาชิก</button>
     </div>
@@ -278,21 +276,6 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-session')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitSession()"><i class="ti ti-device-floppy"></i>บันทึกเซสชั่น</button></div>
   </div>
 </div>
-
-<div class="modal-backdrop" id="modal-edit-session">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">แก้ไขเซสชั่น</div><button class="close-btn" onclick="closeModal('modal-edit-session')"><i class="ti ti-x"></i></button></div>
-    <input type="hidden" id="es-id">
-    <div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="es-type"><option value="PT">PT</option><option value="group_class">คลาสกลุ่ม</option><option value="checkin">เช็คอิน</option></select></div>
-    <div class="fgroup"><label class="flabel">เทรนเนอร์</label><select class="fselect" id="es-trainer"><option value="">— ไม่ระบุ —</option></select></div>
-    <div class="frow"><div class="fgroup"><label class="flabel">วันที่</label><input type="date" class="finput" id="es-date"></div><div class="fgroup"><label class="flabel">เวลา</label><input type="time" class="finput" id="es-time"></div></div>
-    <div class="fgroup"><label class="flabel">ชั่วโมงที่ใช้</label><input type="number" class="finput" id="es-hours" step="0.5" min="0.5"></div>
-    <div class="fgroup"><label class="flabel">หัวข้อ / โปรแกรม</label><input class="finput" id="es-topic"></div>
-    <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-session')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updateSession()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
-  </div>
-</div>
-
-
 <div class="modal-backdrop" id="modal-booking">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">จองนัดใหม่</div><button class="close-btn" onclick="closeModal('modal-booking')"><i class="ti ti-x"></i></button></div>
@@ -300,6 +283,17 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div class="frow"><div class="fgroup"><label class="flabel">วันที่</label><input type="date" class="finput" id="b-date"></div><div class="fgroup"><label class="flabel">เวลา</label><input type="time" class="finput" id="b-time"></div></div>
     <div class="frow"><div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="b-type"><option value="PT">PT</option><option value="group_class">คลาสกลุ่ม</option></select></div><div class="fgroup"><label class="flabel">เทรนเนอร์</label><select class="fselect" id="b-trainer"><option value="">— ไม่ระบุ —</option></select></div></div>
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-booking')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitBooking()"><i class="ti ti-calendar-plus"></i>ยืนยันการจอง</button></div>
+  </div>
+</div>
+<!-- Modal แก้ไขการจอง -->
+<div class="modal-backdrop" id="modal-edit-booking">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">แก้ไขการจอง</div><button class="close-btn" onclick="closeModal('modal-edit-booking')"><i class="ti ti-x"></i></button></div>
+    <input type="hidden" id="eb-id">
+    <div class="fgroup"><label class="flabel">สมาชิก</label><select class="fselect" id="eb-member"><option value="">— เลือกสมาชิก —</option></select></div>
+    <div class="frow"><div class="fgroup"><label class="flabel">วันที่</label><input type="date" class="finput" id="eb-date"></div><div class="fgroup"><label class="flabel">เวลา</label><input type="time" class="finput" id="eb-time"></div></div>
+    <div class="frow"><div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="eb-type"><option value="PT">PT</option><option value="group_class">คลาสกลุ่ม</option></select></div><div class="fgroup"><label class="flabel">เทรนเนอร์</label><select class="fselect" id="eb-trainer"><option value="">— ไม่ระบุ —</option></select></div></div>
+    <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-booking')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updateBooking()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
   </div>
 </div>
 <div class="modal-backdrop" id="modal-payment">
@@ -344,7 +338,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 
 <script>
 const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
-let amountsHidden=false; // ← state ซ่อน/แสดง
+let amountsHidden=false;
 
 function getLocalDate(date=new Date()){return date.toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});}
 async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});const data=await res.json();if(!res.ok)throw new Error(data.error||'เกิดข้อผิดพลาด');return data;}
@@ -359,27 +353,17 @@ function nav(id,btn){
   const[title,sub]=pageMeta[id]||[id,''];
   document.getElementById('page-title').textContent=title;
   document.getElementById('page-sub').textContent=sub;
-  // แสดงปุ่มซ่อนยอดเฉพาะหน้า payments
   document.getElementById('btn-toggle-pay').style.display=id==='payments'?'flex':'none';
   closeSidebar();loadPage(id);
 }
 
-// ── TOGGLE AMOUNTS ────────────────────────────────────
 function toggleAmounts(){
   amountsHidden=!amountsHidden;
   const btn=document.getElementById('btn-toggle-pay');
   const label=document.getElementById('btn-toggle-pay-label');
-  if(amountsHidden){
-    btn.querySelector('i').className='ti ti-eye';
-    label.textContent='แสดงยอด';
-  }else{
-    btn.querySelector('i').className='ti ti-eye-off';
-    label.textContent='ซ่อนยอด';
-  }
-  // blur/unblur ตัวเลขและกราฟ
-  document.querySelectorAll('.pay-amount').forEach(el=>{
-    el.classList.toggle('blurred',amountsHidden);
-  });
+  if(amountsHidden){btn.querySelector('i').className='ti ti-eye';label.textContent='แสดงยอด';}
+  else{btn.querySelector('i').className='ti ti-eye-off';label.textContent='ซ่อนยอด';}
+  document.querySelectorAll('.pay-amount').forEach(el=>el.classList.toggle('blurred',amountsHidden));
   document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart',amountsHidden);
 }
 
@@ -422,11 +406,11 @@ async function loadMembers(q='',status=''){
     let url='/api/members?';if(q)url+='q='+encodeURIComponent(q)+'&';if(status)url+='status='+status;
     const rows=await api(url);const tbody=document.getElementById('members-body');
     if(!rows.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ไม่พบสมาชิก</td></tr>';return;}
-    const sb=s=>s==='active'?'badge-green">แอคทีฟ':s==='expiring'?'badge-amber">ใกล้หมด':'badge-red">หมดอายุ';
+    const sb=s=>s==='active'?'badge-green">แอคทีฟ':s==='expiring'?'badge-amber">ใกล้หมด':s==='expired'?'badge-red">หมดอายุ':'badge-gray">ไม่ระบุ';
     tbody.innerHTML=rows.map(m=>{
       const hu=m.hours_total!=null?m.hours_total-(m.hours_used||0):null;
       const pct=m.hours_total?Math.round(hu/m.hours_total*100):null;
-      const hh=hu!=null?`<div style="min-width:100px"><div style="font-size:13px;font-weight:500">${hu.toFixed(1)} / ${m.hours_total} ชม.</div><div class="pkg-bar"><div class="pkg-fill" style="width:${pct}%;background:${pct<20?'var(--red)':pct<40?'var(--amber)':'var(--green)'}"></div></div></div>`:'<span style="color:var(--muted)">—</span>';
+      const hh=hu!=null?`<div style="min-width:100px"><div style="font-size:13px;font-weight:500">${hu.toFixed(1)} / ${m.hours_total} ชม.</div><div class="pkg-bar"><div class="pkg-fill" style="width:${Math.max(0,pct)}%;background:${pct<20?'var(--red)':pct<40?'var(--amber)':'var(--green)'}"></div></div></div>`:'<span style="color:var(--muted)">—</span>';
       return`<tr>
         <td><div class="av-row"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.trainer_name||'ไม่มีเทรนเนอร์'}</div></div></div></td>
         <td>${m.phone}</td><td>${m.pkg_name||'—'}</td><td>${hh}</td>
@@ -578,14 +562,31 @@ function updateCalLabel(){document.getElementById('cal-month-label').textContent
 function changeMonth(d){calMonth+=d;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}updateCalLabel();loadBookings();}
 
 function buildCalendar(bookings){
-  const grid=document.getElementById('cal-grid');const today=new Date();
+  const grid=document.getElementById('cal-grid');
   const firstDay=new Date(calYear,calMonth-1,1);const lastDay=new Date(calYear,calMonth,0);
   const startDow=firstDay.getDay()===0?6:firstDay.getDay()-1;const cells=[];
   for(let i=0;i<startDow;i++){const d=new Date(calYear,calMonth-1,-startDow+i+1);cells.push({day:d.getDate(),other:true,iso:getLocalDate(d)});}
   for(let d=1;d<=lastDay.getDate();d++){const dt=new Date(calYear,calMonth-1,d);cells.push({day:d,other:false,iso:getLocalDate(dt)});}
   while(cells.length%7!==0){const e=cells.length-lastDay.getDate()-startDow+1;const dt=new Date(calYear,calMonth,e);cells.push({day:dt.getDate(),other:true,iso:getLocalDate(dt)});}
   const dc=['#e85d26','#2563b0','#2a7d4f','#b86e00','#6d3fa0'];const todayIso=getLocalDate();
-  grid.innerHTML=cells.map(c=>{const isT=c.iso===todayIso;const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);const dots=evts.map((e,j)=>`<div class="cal-dot" style="background:${dc[j%dc.length]}22;color:${dc[j%dc.length]}">${String(e.booking_time||'').slice(0,5)} ${e.fname}</div>`).join('');return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;}).join('');
+  grid.innerHTML=cells.map(c=>{
+    const isT=c.iso===todayIso;
+    const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);
+    const dots=evts.map((e,j)=>{
+      const cancelled=e.status==='cancelled';
+      return`<div class="cal-dot${cancelled?' cancelled':''}" style="background:${cancelled?'var(--surface3)':dc[j%dc.length]+'22'};color:${cancelled?'var(--muted)':dc[j%dc.length]}">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${String(e.booking_time||'').slice(0,5)} ${e.fname}</span>
+        ${!cancelled
+          ?`<span class="cal-dot-actions">
+              <button class="cal-dot-btn" onclick="editBooking(${e.id})" title="แก้ไข"><i class="ti ti-edit" style="font-size:9px"></i></button>
+              <button class="cal-dot-btn" onclick="cancelBooking(${e.id})" title="ยกเลิก"><i class="ti ti-x" style="font-size:9px"></i></button>
+            </span>`
+          :`<span style="font-size:9px;flex-shrink:0">(ยกเลิก)</span>`
+        }
+      </div>`;
+    }).join('');
+    return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;
+  }).join('');
 }
 
 async function submitBooking(){
@@ -593,10 +594,47 @@ async function submitBooking(){
   try{await api('/api/bookings',{method:'POST',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('b-trainer').value||null,type:document.getElementById('b-type').value}});closeModal('modal-booking');toast('จองนัดสำเร็จ');loadBookings();}catch(e){toast(e.message,true);}
 }
 
+async function editBooking(id){
+  try{
+    const rows=await api(`/api/bookings?month=${calMonth}&year=${calYear}`);
+    const b=rows.find(x=>x.id===id);if(!b)return;
+    document.getElementById('eb-id').value=b.id;
+    document.getElementById('eb-date').value=(b.booking_date||'').toString().slice(0,10);
+    document.getElementById('eb-time').value=(b.booking_time||'').toString().slice(0,5);
+    document.getElementById('eb-type').value=b.type||'PT';
+    const[members,trainers]=await Promise.all([api('/api/members'),api('/api/trainers')]);
+    document.getElementById('eb-member').innerHTML='<option value="">— เลือกสมาชิก —</option>'+
+      members.map(m=>`<option value="${m.id}"${m.id==b.member_id?' selected':''}>${m.fname} ${m.lname}</option>`).join('');
+    document.getElementById('eb-trainer').innerHTML='<option value="">— ไม่ระบุ —</option>'+
+      trainers.map(t=>`<option value="${t.id}"${t.id==b.trainer_id?' selected':''}>${t.name}</option>`).join('');
+    openModal('modal-edit-booking');
+  }catch(e){toast(e.message,true);}
+}
+
+async function updateBooking(){
+  const id=document.getElementById('eb-id').value;
+  const member_id=document.getElementById('eb-member').value;
+  const date=document.getElementById('eb-date').value;
+  const time=document.getElementById('eb-time').value;
+  if(!member_id||!date||!time){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
+  try{
+    await api('/api/bookings/'+id,{method:'PUT',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('eb-trainer').value||null,type:document.getElementById('eb-type').value}});
+    closeModal('modal-edit-booking');toast('แก้ไขการจองแล้ว');loadBookings();
+  }catch(e){toast(e.message,true);}
+}
+
+async function cancelBooking(id){
+  if(!confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?'))return;
+  try{
+    await api('/api/bookings/'+id,{method:'DELETE'});
+    toast('ยกเลิกการจองแล้ว');loadBookings();
+  }catch(e){toast(e.message,true);}
+}
+
 async function loadPayments(){
   try{
     const d=await api('/api/payments');
-    const b=amountsHidden?'blurred':''; // ← ใส่ class blur ถ้าซ่อนอยู่
+    const b=amountsHidden?'blurred':'';
     document.getElementById('pay-kpis').innerHTML=`
       <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val pay-amount ${b}">${Number(d.month_total).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub pay-amount ${b}">${d.rows.length} รายการ</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">รอชำระ</div><div class="kpi-val pay-amount ${b}">${Number(d.pending_total).toLocaleString()} <span class="kpi-unit">฿</span></div></div>
@@ -604,13 +642,9 @@ async function loadPayments(){
     const ml={transfer:'โอน',cash:'เงินสด',credit_card:'บัตรเครดิต',qr:'QR'};
     document.getElementById('pay-list').innerHTML=d.rows.slice(0,8).map(p=>`
       <div class="session-row">
-        <div style="flex:1">
-          <div class="session-name">${p.fname} ${p.lname}${p.pkg_name?' — '+p.pkg_name:''}</div>
-          <div class="session-meta">${(p.payment_date||'').toString().slice(0,10)} · ${ml[p.method]||p.method}</div>
-        </div>
+        <div style="flex:1"><div class="session-name">${p.fname} ${p.lname}${p.pkg_name?' — '+p.pkg_name:''}</div><div class="session-meta">${(p.payment_date||'').toString().slice(0,10)} · ${ml[p.method]||p.method}</div></div>
         <div class="pay-amount ${b}" style="font-weight:600;color:var(--green)">+฿${Number(p.amount).toLocaleString()}</div>
       </div>`).join('');
-    // blur chart ถ้าซ่อนอยู่
     document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart',amountsHidden);
     const days30=[],vals30=[];for(let i=29;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=getLocalDate(dt);const found=d.monthly30.find(r=>(r.day||'').toString().slice(0,10)===iso);days30.push(i%5===0?dt.getDate()+'/'+(dt.getMonth()+1):'');vals30.push(found?Number(found.total):0);}
     destroyChart('payChart');charts.payChart=new Chart(document.getElementById('payChart'),{type:'line',data:{labels:days30,datasets:[{data:vals30,borderColor:'#e85d26',backgroundColor:'rgba(232,93,38,.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},callback:v=>'฿'+v.toLocaleString()}}}}});
@@ -647,56 +681,6 @@ updateCalLabel();
 document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 checkHealth();
 populateSelects().then(()=>loadDashboard());
-
-async function openEditSession(id) {
-        // ดึงข้อมูลจากตัวแปร sessions ที่โหลดไว้ในหน้า page-sessions
-        const session = allSessions.find(s => s.id == id); 
-        if (!session) return;
-
-        document.getElementById('es-id').value = session.id;
-        document.getElementById('es-type').value = session.type;
-        document.getElementById('es-trainer').value = session.trainer_id || "";
-        document.getElementById('es-date').value = session.session_date;
-        document.getElementById('es-time').value = session.session_time;
-        document.getElementById('es-hours').value = session.hours_used;
-        document.getElementById('es-topic').value = session.topic;
-        
-        openModal('modal-edit-session');
-    }
-
-    async function updateSession() {
-        const id = document.getElementById('es-id').value;
-        const data = {
-            type: document.getElementById('es-type').value,
-            trainer_id: document.getElementById('es-trainer').value,
-            session_date: document.getElementById('es-date').value,
-            session_time: document.getElementById('es-time').value,
-            hours_used: parseFloat(document.getElementById('es-hours').value), // แก้ไขปัญหาทศนิยม
-            topic: document.getElementById('es-topic').value
-        };
-
-        const res = await fetch(`/api/sessions/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        if (res.ok) {
-            closeModal('modal-edit-session');
-            loadSessions(); // เรียกฟังก์ชันโหลดตารางใหม่เพื่อให้ข้อมูลอัปเดต
-            showToast('แก้ไขเซสชั่นเรียบร้อย', 'success');
-        }
-    }
-async function deleteSession(id) {
-    if (!confirm('คุณต้องการลบเซสชั่นนี้ใช่หรือไม่?')) return;
-    const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-        loadSessions(); // โหลดตารางใหม่
-        alert('ลบเซสชั่นเรียบร้อย');
-    } else {
-        alert('เกิดข้อผิดพลาด');
-    }
-}
 </script>
 </body>
 </html>

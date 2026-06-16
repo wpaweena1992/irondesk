@@ -15,20 +15,17 @@ app.use(express.static(path.join(__dirname, '../public')));
 // ── AUTO UPDATE STATUS ────────────────────────────────
 async function refreshMemberStatus() {
   try {
-    // หมดชั่วโมงก่อน (สำคัญที่สุด)
     await db.query(`
       UPDATE member_packages SET status='expired'
       WHERE status IN ('active','expiring')
       AND hours_total IS NOT NULL
       AND (hours_total - hours_used) <= 0
     `);
-    // หมดตามวันที่
     await db.query(`
       UPDATE member_packages SET status='expired'
       WHERE status IN ('active','expiring')
       AND expiry_date < CURRENT_DATE
     `);
-    // ใกล้หมด = เหลือ > 0 และ <= 2 ชม. และยังไม่เลยวัน
     await db.query(`
       UPDATE member_packages SET status='expiring'
       WHERE status = 'active'
@@ -52,7 +49,6 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/dashboard', async (req, res) => {
   try {
     await refreshMemberStatus();
-
     const [tm]  = await db.query(`SELECT COUNT(*) AS n FROM members WHERE active=TRUE`);
     const [am]  = await db.query(`SELECT COUNT(*) AS n FROM member_packages WHERE status='active'`);
     const [em]  = await db.query(`SELECT COUNT(*) AS n FROM member_packages WHERE status='expiring'`);
@@ -60,14 +56,12 @@ app.get('/api/dashboard', async (req, res) => {
     const [dt]  = await db.query(`SELECT COUNT(*) AS n FROM sessions WHERE session_date=CURRENT_DATE AND status='done'`);
     const [rm]  = await db.query(`SELECT COALESCE(SUM(amount),0) AS n FROM payments WHERE DATE_TRUNC('month',payment_date)=DATE_TRUNC('month',CURRENT_DATE)`);
     const [pa]  = await db.query(`SELECT COALESCE(SUM(p.amount),0) AS n FROM payments p JOIN member_packages mp ON p.member_pkg_id=mp.id WHERE mp.paid=FALSE`);
-
     const rev7 = await db.query(`
       SELECT payment_date::date AS day, SUM(amount) AS total
       FROM payments
       WHERE payment_date >= CURRENT_DATE - INTERVAL '6 days'
       GROUP BY payment_date::date ORDER BY day ASC
     `);
-
     const alerts = await db.query(`
       SELECT m.fname, m.lname, p.name AS pkg_name,
              mp.hours_total - mp.hours_used AS hours_left,
@@ -78,7 +72,6 @@ app.get('/api/dashboard', async (req, res) => {
       WHERE mp.status IN ('expiring','expired')
       ORDER BY mp.expiry_date ASC LIMIT 5
     `);
-
     const pkgDist = await db.query(`
       SELECT p.type, COUNT(*) AS count
       FROM member_packages mp
@@ -86,7 +79,6 @@ app.get('/api/dashboard', async (req, res) => {
       WHERE mp.status='active'
       GROUP BY p.type
     `);
-
     res.json({
       total_members: tm.n, active_members: am.n, expiring_members: em.n,
       sessions_today: st.n, done_today: dt.n,
@@ -100,7 +92,6 @@ app.get('/api/dashboard', async (req, res) => {
 app.get('/api/members', async (req, res) => {
   try {
     await refreshMemberStatus();
-
     const { q, status } = req.query;
     let sql = `
       SELECT m.id, m.fname, m.lname, m.phone, m.email, m.color, m.goal,
@@ -136,13 +127,11 @@ app.post('/api/members', async (req, res) => {
   try {
     const { fname, lname, phone, email, trainer_id, color, package_id, start_date, goal } = req.body;
     if (!fname || !phone) return res.status(400).json({ error: 'fname และ phone จำเป็น' });
-
     const [member] = await db.query(
       `INSERT INTO members (fname,lname,phone,email,trainer_id,color,goal) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
       [fname, lname||'', phone, email||null, trainer_id||null, color||'orange', goal||null]
     );
     const memberId = member.id;
-
     if (package_id && start_date) {
       const [pkg] = await db.query(`SELECT * FROM packages WHERE id=$1`, [package_id]);
       if (pkg) {
@@ -162,12 +151,10 @@ app.put('/api/members/:id', async (req, res) => {
   try {
     const { fname, lname, phone, email, trainer_id, package_id, start_date, goal } = req.body;
     if (!fname || !phone) return res.status(400).json({ error: 'fname และ phone จำเป็น' });
-
     await db.query(
       `UPDATE members SET fname=$1, lname=$2, phone=$3, email=$4, trainer_id=$5, goal=$6 WHERE id=$7`,
       [fname, lname||'', phone, email||null, trainer_id||null, goal||null, req.params.id]
     );
-
     if (package_id && start_date) {
       const [pkg] = await db.query(`SELECT * FROM packages WHERE id=$1`, [package_id]);
       if (pkg) {
@@ -289,11 +276,7 @@ app.patch('/api/sessions/:id/done', async (req, res) => {
     if (!s) return res.status(404).json({ error: 'ไม่พบเซสชั่น' });
     await db.query(`UPDATE sessions SET status='done' WHERE id=$1`, [req.params.id]);
     if (s.member_pkg_id && s.hours_used) {
-      await db.query(
-        `UPDATE member_packages SET hours_used = hours_used + $1 WHERE id=$2`,
-        [s.hours_used, s.member_pkg_id]
-      );
-      // อัปเดต status หลังหักชั่วโมง
+      await db.query(`UPDATE member_packages SET hours_used = hours_used + $1 WHERE id=$2`, [s.hours_used, s.member_pkg_id]);
       await db.query(`
         UPDATE member_packages SET status =
           CASE
@@ -315,7 +298,7 @@ app.get('/api/bookings', async (req, res) => {
     const m = req.query.month || new Date().getMonth() + 1;
     const y = req.query.year  || new Date().getFullYear();
     res.json(await db.query(`
-      SELECT b.id, b.type, b.status,
+      SELECT b.id, b.type, b.status, b.member_id, b.trainer_id,
              b.booking_date::text AS booking_date,
              b.booking_time::text AS booking_time,
              m.fname, m.lname, t.name AS trainer_name
@@ -340,6 +323,20 @@ app.post('/api/bookings', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ✅ แก้ไขการจอง
+app.put('/api/bookings/:id', async (req, res) => {
+  try {
+    const { member_id, trainer_id, booking_date, booking_time, type, notes } = req.body;
+    if (!member_id || !booking_date || !booking_time) return res.status(400).json({ error: 'ข้อมูลไม่ครบ' });
+    await db.query(
+      `UPDATE bookings SET member_id=$1, trainer_id=$2, booking_date=$3, booking_time=$4, type=$5, notes=$6 WHERE id=$7`,
+      [member_id, trainer_id||null, booking_date, booking_time, type||'PT', notes||'', req.params.id]
+    );
+    res.json({ message: 'แก้ไขการจองสำเร็จ' });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ✅ ยกเลิกการจอง (soft delete)
 app.delete('/api/bookings/:id', async (req, res) => {
   try {
     await db.query(`UPDATE bookings SET status='cancelled' WHERE id=$1`, [req.params.id]);
