@@ -413,23 +413,3 @@ app.listen(PORT, () => {
   console.log(`\n🏋️  IronDesk รันที่ http://localhost:${PORT}`);
   console.log(`🐘  PostgreSQL: ${process.env.DATABASE_URL?.split('@')[1] || 'local'}\n`);
 });
-
-// ── AUTHENTICATION MIDDLEWARE ─────────────────────────
-const checkAuth = (req, res, next) => {
-  // 1. อนุญาตให้ทุกคนสามารถดึงข้อมูลเพื่อดูได้ (Method GET)
-  if (req.method === 'GET') return next();
-
-  // 2. กำหนดรหัสผ่านสำหรับการแก้ไข (สามารถตั้งในไฟล์ .env เป็น ADMIN_PIN=รหัสของคุณ ได้)
-  const ADMIN_PIN = process.env.ADMIN_PIN || '123456'; 
-
-  // 3. ตรวจสอบรหัสที่ส่งมาจาก Frontend
-  const pin = req.headers['x-admin-pin'];
-  if (pin === ADMIN_PIN) {
-    return next(); // รหัสถูกต้อง ให้ทำงานคำสั่งต่อไป
-  } else {
-    return res.status(401).json({ error: 'รหัสผ่านไม่ถูกต้อง หรือยังไม่ได้ยืนยันตัวตน' });
-  }
-};
-
-// นำ Middleware มาใช้งานกับทุกๆ /api
-app.use('/api', checkAuth);
