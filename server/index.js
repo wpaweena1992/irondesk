@@ -12,6 +12,34 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
+// ── AUTO UPDATE STATUS ────────────────────────────────
+async function refreshMemberStatus() {
+  try {
+    // หมดอายุตามวันที่
+    await db.query(`
+      UPDATE member_packages SET status='expired'
+      WHERE status IN ('active','expiring')
+      AND expiry_date < CURRENT_DATE
+    `);
+    // ใช้ชั่วโมงหมดแล้ว (เหลือ 0 หรือน้อยกว่า)
+    await db.query(`
+      UPDATE member_packages SET status='expired'
+      WHERE status IN ('active','expiring')
+      AND hours_total IS NOT NULL
+      AND (hours_total - hours_used) <= 0
+    `);
+    // ใกล้หมด = เหลือ <= 2 ชม. และยังไม่หมดอายุ
+    await db.query(`
+      UPDATE member_packages SET status='expiring'
+      WHERE status='active'
+      AND expiry_date >= CURRENT_DATE
+      AND hours_total IS NOT NULL
+      AND (hours_total - hours_used) > 0
+      AND (hours_total - hours_used) <= 2
+    `);
+  } catch(e) { console.error('refreshMemberStatus error:', e.message); }
+}
+
 // ── HEALTH ────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
   try {
@@ -23,6 +51,8 @@ app.get('/api/health', async (req, res) => {
 // ── DASHBOARD ─────────────────────────────────────────
 app.get('/api/dashboard', async (req, res) => {
   try {
+    await refreshMemberStatus();
+
     const [tm]  = await db.query(`SELECT COUNT(*) AS n FROM members WHERE active=TRUE`);
     const [am]  = await db.query(`SELECT COUNT(*) AS n FROM member_packages WHERE status='active'`);
     const [em]  = await db.query(`SELECT COUNT(*) AS n FROM member_packages WHERE status='expiring'`);
@@ -69,6 +99,8 @@ app.get('/api/dashboard', async (req, res) => {
 // ── MEMBERS ───────────────────────────────────────────
 app.get('/api/members', async (req, res) => {
   try {
+    await refreshMemberStatus();
+
     const { q, status } = req.query;
     let sql = `
       SELECT m.id, m.fname, m.lname, m.phone, m.email, m.color, m.goal,
@@ -126,7 +158,6 @@ app.post('/api/members', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ✅ PUT — แก้ไขสมาชิก
 app.put('/api/members/:id', async (req, res) => {
   try {
     const { fname, lname, phone, email, trainer_id, package_id, start_date, goal } = req.body;
@@ -137,19 +168,15 @@ app.put('/api/members/:id', async (req, res) => {
       [fname, lname||'', phone, email||null, trainer_id||null, goal||null, req.params.id]
     );
 
-    // อัปเดตแพ็กเกจถ้ามีการเลือก
     if (package_id && start_date) {
       const [pkg] = await db.query(`SELECT * FROM packages WHERE id=$1`, [package_id]);
       if (pkg) {
         const expiry = new Date(start_date);
         expiry.setDate(expiry.getDate() + pkg.validity_days);
-
-        // ตรวจสอบว่ามี member_package อยู่แล้วไหม
         const [existing] = await db.query(
           `SELECT id FROM member_packages WHERE member_id=$1 ORDER BY created_at DESC LIMIT 1`,
           [req.params.id]
         );
-
         if (existing) {
           await db.query(
             `UPDATE member_packages SET package_id=$1, hours_total=$2, sessions_total=$3, start_date=$4, expiry_date=$5, status='active' WHERE id=$6`,
@@ -163,12 +190,10 @@ app.put('/api/members/:id', async (req, res) => {
         }
       }
     }
-
     res.json({ message: 'แก้ไขสมาชิกสำเร็จ' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ✅ DELETE — ลบสมาชิก (soft delete)
 app.delete('/api/members/:id', async (req, res) => {
   try {
     await db.query(`UPDATE members SET active=FALSE WHERE id=$1`, [req.params.id]);
@@ -201,7 +226,6 @@ app.post('/api/packages', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ✅ PUT — แก้ไขแพ็กเกจ
 app.put('/api/packages/:id', async (req, res) => {
   try {
     const { name, type, price, hours, sessions, validity_days, description } = req.body;
@@ -214,7 +238,6 @@ app.put('/api/packages/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ✅ DELETE — ลบแพ็กเกจ (soft delete)
 app.delete('/api/packages/:id', async (req, res) => {
   try {
     await db.query(`UPDATE packages SET active=FALSE WHERE id=$1`, [req.params.id]);
@@ -266,36 +289,23 @@ app.patch('/api/sessions/:id/done', async (req, res) => {
     if (!s) return res.status(404).json({ error: 'ไม่พบเซสชั่น' });
     await db.query(`UPDATE sessions SET status='done' WHERE id=$1`, [req.params.id]);
     if (s.member_pkg_id && s.hours_used) {
-      await db.query(`UPDATE member_packages SET hours_used = hours_used + $1 WHERE id=$2`, [s.hours_used, s.member_pkg_id]);
+      await db.query(
+        `UPDATE member_packages SET hours_used = hours_used + $1 WHERE id=$2`,
+        [s.hours_used, s.member_pkg_id]
+      );
+      // อัปเดต status หลังหักชั่วโมง
       await db.query(`
         UPDATE member_packages SET status =
-          CASE WHEN hours_total IS NOT NULL AND (hours_total - hours_used) <= 2 THEN 'expiring'
-               WHEN expiry_date <= CURRENT_DATE THEN 'expired'
-               ELSE status END
+          CASE
+            WHEN (hours_total - hours_used) <= 0 THEN 'expired'
+            WHEN expiry_date < CURRENT_DATE THEN 'expired'
+            WHEN (hours_total - hours_used) <= 2 THEN 'expiring'
+            ELSE status
+          END
         WHERE id=$1
       `, [s.member_pkg_id]);
     }
     res.json({ message: 'บันทึกเซสชั่นเสร็จสิ้น' });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-// ✅ PUT — แก้ไขเซสชั่น
-app.put('/api/sessions/:id', async (req, res) => {
-  try {
-    const { trainer_id, type, topic, session_date, session_time, hours_used } = req.body;
-    await db.query(
-      `UPDATE sessions SET trainer_id=$1, type=$2, topic=$3, session_date=$4, session_time=$5, hours_used=$6 WHERE id=$7`,
-      [trainer_id || null, type, topic || '', session_date, session_time, hours_used, req.params.id]
-    );
-    res.json({ message: 'แก้ไขเซสชั่นสำเร็จ' });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
-// เพิ่มโค้ดนี้ในไฟล์ index.js เพื่อให้ Backend รับคำสั่ง DELETE ได้
-app.delete('/api/sessions/:id', async (req, res) => {
-  try {
-    await db.query(`DELETE FROM sessions WHERE id=$1`, [req.params.id]);
-    res.json({ message: 'ลบเซสชั่นสำเร็จ' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

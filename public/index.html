@@ -689,15 +689,12 @@ async function openEditSession(id) {
     }
 async function deleteSession(id) {
     if (!confirm('คุณต้องการลบเซสชั่นนี้ใช่หรือไม่?')) return;
-    
-    // ส่งคำสั่ง DELETE ไปยัง API
     const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
     if (res.ok) {
-        // เมื่อลบสำเร็จ ให้โหลดตารางใหม่เพื่อให้ข้อมูลอัปเดต
-        loadSessions(); 
-        showToast('ลบเซสชั่นเรียบร้อย', 'success');
+        loadSessions(); // โหลดตารางใหม่
+        alert('ลบเซสชั่นเรียบร้อย');
     } else {
-        showToast('เกิดข้อผิดพลาดในการลบ', 'error');
+        alert('เกิดข้อผิดพลาด');
     }
 }
 </script>
