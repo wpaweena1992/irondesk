@@ -144,20 +144,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 @media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
-
-/* สไตล์สำหรับเบลอข้อมูลรายรับ */
-.blur-revenue {
-  filter: blur(7px) !important;
-  transition: filter 0.2s ease;
-  user-select: none;
-  pointer-events: none;
-}
 </style>
-
-<button onclick="toggleRevenuePrivacy()" class="fbtn" id="btn-revenue-privacy" style="display: flex; align-items: center; gap: 6px;">
-  <i class="ti ti-eye-off"></i> <span id="text-revenue-privacy">ซ่อนยอดเงิน</span>
-</button>
-
 </head>
 <body>
 <aside class="sidebar" id="sidebar">
@@ -174,9 +161,9 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <button class="nav-btn" onclick="nav('booking',this)"><i class="ti ti-calendar"></i>ตารางนัด</button>
   <div class="nav-section">การเงิน</div>
   <button class="nav-btn" onclick="nav('payments',this)"><i class="ti ti-credit-card"></i>รายรับ</button>
-  <div class="sidebar-bottom" class="privacy-target">
+  <div class="sidebar-bottom">
     <div class="staff-chip">
-      <div class="staff-avatar">I</div>
+      <div class="staff-avatar">ส</div>
       <div><div class="staff-name">Issara Studio</div><div class="staff-role"></div></div>
     </div>
   </div>
@@ -200,7 +187,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div id="page-dashboard" class="page active">
       <div class="kpi-grid" id="dash-kpis"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
       <div class="g3 mb">
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>รายรับ 7 วัน</div></div><div class="privacy-target" style="position:relative;height:210px"><canvas id="revenueChart"></canvas></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>รายรับ 7 วัน</div></div><div style="position:relative;height:210px"><canvas id="revenueChart"></canvas></div></div>
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-bell-ringing"></i>แจ้งเตือน</div></div><div id="dash-alerts"><div class="page-spinner"><div class="spinner"></div></div></div></div>
       </div>
       <div class="g2 mb">
@@ -398,7 +385,7 @@ async function loadDashboard(){
     const d=await api('/api/dashboard');
     document.getElementById('dash-kpis').innerHTML=`
       <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">สมาชิกทั้งหมด</div><div class="kpi-val">${d.total_members} <span class="kpi-unit">คน</span></div><div class="kpi-sub">แอคทีฟ ${d.active_members} คน</div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label" class="privacy-target">รายรับเดือนนี้</div><div class="kpi-val">${Number(d.revenue_month).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub">ค้างชำระ ฿${Number(d.pending_amount).toLocaleString()}</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val">${Number(d.revenue_month).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub">ค้างชำระ ฿${Number(d.pending_amount).toLocaleString()}</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">เซสชั่นวันนี้</div><div class="kpi-val">${d.sessions_today} <span class="kpi-unit">เซสชั่น</span></div><div class="kpi-sub">เสร็จแล้ว ${d.done_today} รายการ</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">แพ็กเกจใกล้หมด</div><div class="kpi-val">${d.expiring_members} <span class="kpi-unit">ราย</span></div><div class="kpi-sub">ต้องต่ออายุเร็วๆนี้</div></div>`;
     const alertColors={expiring:['amber','ti-clock-exclamation','var(--amber-lt)'],expired:['red','ti-calendar-x','var(--red-lt)']};
@@ -682,7 +669,7 @@ async function loadPayments(){
     const d=await api('/api/payments');
     const b=amountsHidden?'blurred':'';
     document.getElementById('pay-kpis').innerHTML=`
-      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val pay-amount ${b}" class="privacy-target">${Number(d.month_total).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub pay-amount ${b}">${d.rows.length} รายการ</div></div>
+      <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val pay-amount ${b}">${Number(d.month_total).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub pay-amount ${b}">${d.rows.length} รายการ</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">รอชำระ</div><div class="kpi-val pay-amount ${b}">${Number(d.pending_total).toLocaleString()} <span class="kpi-unit">฿</span></div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">รายรับเฉลี่ย/วัน</div><div class="kpi-val pay-amount ${b}">${Math.round(d.month_total/new Date().getDate()).toLocaleString()} <span class="kpi-unit">฿</span></div></div>`;
     const ml={transfer:'โอน',cash:'เงินสด',credit_card:'บัตรเครดิต',qr:'QR'};
@@ -727,49 +714,6 @@ updateCalLabel();
 document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 checkHealth();
 populateSelects().then(()=>loadDashboard());
-
-let isRevenueHidden = false;
-
-function toggleRevenuePrivacy() {
-  isRevenueHidden = !isRevenueHidden;
-  
-  // ค้นหาองค์ประกอบทั้งหมดที่ต้องการซ่อน
-  const targets = document.querySelectorAll('.privacy-target');
-  const btnIcon = document.querySelector('#btn-revenue-privacy i');
-  const btnText = document.getElementById('text-revenue-privacy');
-
-  targets.forEach(el => {
-    if (isRevenueHidden) {
-      el.classList.add('blur-revenue');
-    } else {
-      el.classList.remove('blur-revenue');
-    }
-  });
-
-  // เปลี่ยนสถานะปุ่มและไอคอน
-  if (isRevenueHidden) {
-    btnIcon.className = 'ti ti-eye';
-    btnText.innerText = 'แสดงยอดเงิน';
-    sessionStorage.setItem('hideRevenue', 'true');
-  } else {
-    btnIcon.className = 'ti ti-eye-off';
-    btnText.innerText = 'ซ่อนยอดเงิน';
-    sessionStorage.removeItem('hideRevenue');
-  }
-}
-
-// ฟังก์ชันสำหรับตรวจสอบสถานะตอนโหลดหน้าจอใหม่อัตโนมัติ
-function checkRevenuePrivacyOnLoad() {
-  if (sessionStorage.getItem('hideRevenue') === 'true') {
-    // กำหนดให้เป็น false ก่อนเพื่อให้ฟังก์ชัน toggle ทำงานสลับเป็น true
-    isRevenueHidden = false; 
-    toggleRevenuePrivacy();
-  }
-}
-
-// อย่าลืมเรียกใช้ฟังก์ชัน checkRevenuePrivacyOnLoad() 
-// หลังจากที่หน้าจอโหลดข้อมูลแดชบอร์ดเสร็จสิ้นแล้ว (เช่น ท้ายฟังก์ชัน loadDashboard())
-
 </script>
 </body>
 </html>
