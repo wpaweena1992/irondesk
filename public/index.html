@@ -379,6 +379,45 @@ const DAYS_TH=['จ','อ','พ','พฤ','ศ','ส','อา'];
 const pkgColors={PT_hours:'#e85d26',monthly:'#2563b0',class_sessions:'#2a7d4f',bundle:'#6d3fa0'};
 const pkgLabels={PT_hours:'PT ชั่วโมง',monthly:'รายเดือน',class_sessions:'คลาสกลุ่ม',bundle:'บันเดิล'};
 
+// ค้นหาฟังก์ชัน api() เดิมและแทนที่ด้วยโค้ดนี้
+async function api(url, options = {}) {
+  options.headers = options.headers || {};
+  
+  // แนบรหัสผ่านไปด้วยทุกครั้งถ้าเคยกรอกแล้ว (เก็บไว้ใน Session ของเบราว์เซอร์)
+  const pin = sessionStorage.getItem('adminPin');
+  if (pin) options.headers['x-admin-pin'] = pin;
+
+  // จัดการแปลง Body ให้เป็น JSON สำหรับการ POST/PATCH
+  if (options.body && typeof options.body !== 'string') {
+    options.body = JSON.stringify(options.body);
+    options.headers['Content-Type'] = 'application/json';
+  }
+
+  const res = await fetch(url, options);
+  
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    
+    // หากติด 401 (ไม่มีสิทธิ์ หรือรหัสผิด) ให้ถามรหัสผ่าน
+    if (res.status === 401) {
+      const input = prompt("🔒 กรุณาใส่รหัสผ่านเพื่อยืนยันการแก้ไขข้อมูล:");
+      if (input) {
+        // บันทึกรหัสผ่านไว้ชั่วคราวและลองเรียก API เดิมซ้ำอีกครั้ง
+        sessionStorage.setItem('adminPin', input);
+        return api(url, options); 
+      } else {
+        throw new Error('ยกเลิกการทำรายการ');
+      }
+    }
+    
+    throw new Error(data.error || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์');
+  }
+  
+  // สำหรับ API ที่คืนค่าข้อมูลกลับมา
+  const text = await res.text();
+  return text ? JSON.parse(text) : {};
+}
+
 async function loadDashboard(){
   try{
     const d=await api('/api/dashboard');
