@@ -623,14 +623,36 @@ function buildCalendar(bookings){
 }
 
 async function submitBooking(){
-  const member_id=document.getElementById('b-member').value;const date=document.getElementById('b-date').value;const time=document.getElementById('b-time').value;if(!member_id||!date||!time){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
+  const member_id=document.getElementById('b-member').value;
+  const date=document.getElementById('b-date').value;
+  const time=document.getElementById('b-time').value;
+  if(!member_id||!date||!time){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
   try{
-    await api('/api/bookings',{method:'POST',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('b-trainer').value||null,type:document.getElementById('b-type').value}});
+    // 1. สร้าง Booking
+    await api('/api/bookings',{method:'POST',body:{
+      member_id, booking_date:date, booking_time:time,
+      trainer_id:document.getElementById('b-trainer').value||null,
+      type:document.getElementById('b-type').value
+    }});
+
+    // 2. สร้าง Session อัตโนมัติจาก Booking
+    await api('/api/sessions',{method:'POST',body:{
+      member_id,
+      session_date: date,
+      session_time: time,
+      trainer_id: document.getElementById('b-trainer').value||null,
+      type: document.getElementById('b-type').value,
+      hours_used: 1.0,
+      topic: ''
+    }});
+
     closeModal('modal-booking');
-    toast('จองนัดสำเร็จ ✅');
-    // ✅ Auto ไปหน้า Sessions
+    toast('จองนัดและสร้างเซสชั่นแล้ว ✅');
+
+    // 3. Auto ไปหน้า Sessions
     const sessionBtn=document.querySelector('.nav-btn[onclick*="sessions"]');
     if(sessionBtn) nav('sessions', sessionBtn);
+
   }catch(e){toast(e.message,true);}
 }
 
