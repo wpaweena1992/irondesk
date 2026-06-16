@@ -270,25 +270,42 @@ app.post('/api/sessions', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.patch('/api/sessions/:id/done', async (req, res) => {
+app.patch('/api/sessions/:id/status', async (req, res) => {
   try {
+    const { status } = req.body;
     const [s] = await db.query(`SELECT * FROM sessions WHERE id=$1`, [req.params.id]);
     if (!s) return res.status(404).json({ error: 'ไม่พบเซสชั่น' });
-    await db.query(`UPDATE sessions SET status='done' WHERE id=$1`, [req.params.id]);
+
+    const oldStatus = s.status;
+    if (oldStatus === status) return res.json({ message: 'สถานะเดิม' });
+
+    // อัปเดตสถานะในตาราง sessions
+    await db.query(`UPDATE sessions SET status=$1 WHERE id=$2`, [status, req.params.id]);
+
+    // จัดการเรื่องการหัก/คืนชั่วโมงแพ็กเกจ
     if (s.member_pkg_id && s.hours_used) {
-      await db.query(`UPDATE member_packages SET hours_used = hours_used + $1 WHERE id=$2`, [s.hours_used, s.member_pkg_id]);
+      if (status === 'done' && oldStatus !== 'done') {
+        // หักชั่วโมง เมื่อเปลี่ยนเป็น 'เสร็จแล้ว'
+        await db.query(`UPDATE member_packages SET hours_used = hours_used + $1 WHERE id=$2`, [s.hours_used, s.member_pkg_id]);
+      } else if (oldStatus === 'done' && status !== 'done') {
+        // คืนชั่วโมง เมื่อย้อนกลับจาก 'เสร็จแล้ว' ไปเป็นสถานะอื่น
+        await db.query(`UPDATE member_packages SET hours_used = hours_used - $1 WHERE id=$2`, [s.hours_used, s.member_pkg_id]);
+      }
+
+      // ประเมินสถานะแพ็กเกจใหม่ (เผื่อคืนชั่วโมงแล้วแพ็กเกจกลับมาใช้งานได้)
       await db.query(`
         UPDATE member_packages SET status =
           CASE
             WHEN (hours_total - hours_used) <= 0 THEN 'expired'
             WHEN expiry_date < CURRENT_DATE THEN 'expired'
             WHEN (hours_total - hours_used) <= 2 THEN 'expiring'
-            ELSE status
+            ELSE 'active'
           END
         WHERE id=$1
       `, [s.member_pkg_id]);
     }
-    res.json({ message: 'บันทึกเซสชั่นเสร็จสิ้น' });
+    
+    res.json({ message: 'อัปเดตสถานะเซสชั่นเสร็จสิ้น' });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

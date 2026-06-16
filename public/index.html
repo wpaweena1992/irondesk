@@ -544,8 +544,40 @@ async function loadSessionHistory(){
   }catch(e){toast(e.message,true);}
 }
 
-async function markDone(id,btn){
-  try{await api('/api/sessions/'+id+'/done',{method:'PATCH'});btn.closest('tr').querySelector('td:nth-child(6)').innerHTML='<span class="badge badge-green">เสร็จแล้ว</span>';btn.closest('td').innerHTML='';toast('บันทึกเซสชั่นเสร็จสิ้น');}catch(e){toast(e.message,true);}
+async function loadSessions(){
+  try{
+    const today=getLocalDate();const rows=await api('/api/sessions?date='+today);
+    document.getElementById('sessions-body').innerHTML=rows.length?rows.map(s=>`
+      <tr>
+        <td style="font-weight:600">${String(s.session_time||'').slice(0,5)}</td>
+        <td><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic||''}</div></td>
+        <td>${s.type}</td>
+        <td>${s.trainer_name||'—'}</td>
+        <td>${s.hours_used} ชม.</td>
+        <td>
+          <select class="fselect" style="padding:4px 8px; font-size:12.5px; width:auto; cursor:pointer;" onchange="updateSessionStatus(${s.id}, this.value)">
+            <option value="upcoming" ${s.status==='upcoming'?'selected':''}>นัดไว้</option>
+            <option value="active" ${s.status==='active'?'selected':''}>กำลังเทรน</option>
+            <option value="done" ${s.status==='done'?'selected':''}>เสร็จแล้ว</option>
+            <option value="cancelled" ${s.status==='cancelled'?'selected':''}>ยกเลิก</option>
+          </select>
+        </td>
+        <td></td>
+      </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
+  }catch(e){toast(e.message,true);}
+}
+
+// ฟังก์ชันใหม่สำหรับจับ Event ตอนเลือก Dropdown
+async function updateSessionStatus(id, status){
+  try{
+    await api('/api/sessions/'+id+'/status', { method:'PATCH', body: { status } });
+    toast('อัปเดตสถานะเรียบร้อย');
+    loadSessions();
+    if(typeof loadDashboard === 'function') loadDashboard(); // ดึงข้อมูลหน้าภาพรวมใหม่เผื่อมีการคืน/หักชั่วโมง
+  }catch(e){
+    toast(e.message,true);
+    loadSessions(); // โหลดเซสชั่นใหม่เพื่อคืนค่า Dropdown หากเกิด Error
+  }
 }
 
 async function submitSession(){
