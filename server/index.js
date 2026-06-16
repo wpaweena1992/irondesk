@@ -15,23 +15,23 @@ app.use(express.static(path.join(__dirname, '../public')));
 // ── AUTO UPDATE STATUS ────────────────────────────────
 async function refreshMemberStatus() {
   try {
-    // หมดอายุตามวันที่
-    await db.query(`
-      UPDATE member_packages SET status='expired'
-      WHERE status IN ('active','expiring')
-      AND expiry_date < CURRENT_DATE
-    `);
-    // ใช้ชั่วโมงหมดแล้ว (เหลือ 0 หรือน้อยกว่า)
+    // หมดชั่วโมงก่อน (สำคัญที่สุด)
     await db.query(`
       UPDATE member_packages SET status='expired'
       WHERE status IN ('active','expiring')
       AND hours_total IS NOT NULL
       AND (hours_total - hours_used) <= 0
     `);
-    // ใกล้หมด = เหลือ <= 2 ชม. และยังไม่หมดอายุ
+    // หมดตามวันที่
+    await db.query(`
+      UPDATE member_packages SET status='expired'
+      WHERE status IN ('active','expiring')
+      AND expiry_date < CURRENT_DATE
+    `);
+    // ใกล้หมด = เหลือ > 0 และ <= 2 ชม. และยังไม่เลยวัน
     await db.query(`
       UPDATE member_packages SET status='expiring'
-      WHERE status='active'
+      WHERE status = 'active'
       AND expiry_date >= CURRENT_DATE
       AND hours_total IS NOT NULL
       AND (hours_total - hours_used) > 0
