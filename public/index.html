@@ -624,7 +624,14 @@ function buildCalendar(bookings){
 
 async function submitBooking(){
   const member_id=document.getElementById('b-member').value;const date=document.getElementById('b-date').value;const time=document.getElementById('b-time').value;if(!member_id||!date||!time){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
-  try{await api('/api/bookings',{method:'POST',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('b-trainer').value||null,type:document.getElementById('b-type').value}});closeModal('modal-booking');toast('จองนัดสำเร็จ');loadBookings();}catch(e){toast(e.message,true);}
+  try{
+    await api('/api/bookings',{method:'POST',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('b-trainer').value||null,type:document.getElementById('b-type').value}});
+    closeModal('modal-booking');
+    toast('จองนัดสำเร็จ ✅');
+    // ✅ Auto ไปหน้า Sessions
+    const sessionBtn=document.querySelector('.nav-btn[onclick*="sessions"]');
+    if(sessionBtn) nav('sessions', sessionBtn);
+  }catch(e){toast(e.message,true);}
 }
 
 async function editBooking(id){
