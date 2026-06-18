@@ -337,6 +337,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-package')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updatePackage()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
   </div>
 </div>
+<div class="modal-backdrop" id="modal-pin">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-head"><div class="modal-title"><i class="ti ti-lock"></i> ใส่รหัสเข้าดูรายรับ</div><button class="close-btn" onclick="closeModal('modal-pin')"><i class="ti ti-x"></i></button></div>
+    <div class="fgroup"><label class="flabel">รหัสผ่าน</label><input type="password" class="finput" id="pin-input" placeholder="••••" inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPaymentsPin()"></div>
+    <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-pin')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="verifyPaymentsPin()"><i class="ti ti-lock-open"></i>ปลดล็อก</button></div>
+  </div>
+</div>
 <div class="modal-backdrop" id="modal-confirm-delete">
   <div class="modal" style="max-width:380px">
     <div class="modal-head"><div class="modal-title" style="color:var(--red)"><i class="ti ti-alert-triangle"></i> ยืนยันการลบ</div><button class="close-btn" onclick="closeModal('modal-confirm-delete')"><i class="ti ti-x"></i></button></div>
@@ -357,6 +364,14 @@ function toast(msg,isErr=false){const t=document.getElementById('toast');t.class
 const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน'],mycheck:['เช็คข้อมูลสมาชิก','ค้นหาและดูข้อมูลส่วนตัวของสมาชิก']};
 
 function nav(id,btn){
+  if(id==='payments'&&!paymentsUnlocked){
+    pendingNav={id,btn};
+    const pinInput=document.getElementById('pin-input');
+    if(pinInput)pinInput.value='';
+    closeSidebar();
+    openModal('modal-pin');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -366,6 +381,25 @@ function nav(id,btn){
   document.getElementById('page-sub').textContent=sub;
   document.getElementById('btn-toggle-pay').style.display=id==='payments'?'flex':'none';
   closeSidebar();loadPage(id);
+}
+
+const PAYMENTS_PIN='2468'; // เปลี่ยนรหัสเข้าดูรายรับได้ที่นี่
+let paymentsUnlocked=false;
+let pendingNav=null;
+
+function verifyPaymentsPin(){
+  const input=document.getElementById('pin-input');
+  const val=input.value.trim();
+  if(!val){toast('กรุณากรอกรหัส',true);return;}
+  if(val===PAYMENTS_PIN){
+    paymentsUnlocked=true;
+    closeModal('modal-pin');
+    if(pendingNav){nav(pendingNav.id,pendingNav.btn);pendingNav=null;}
+  }else{
+    toast('รหัสไม่ถูกต้อง',true);
+    input.value='';
+    input.focus();
+  }
 }
 
 function toggleAmounts(){
