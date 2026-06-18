@@ -161,6 +161,8 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <button class="nav-btn" onclick="nav('booking',this)"><i class="ti ti-calendar"></i>ตารางนัด</button>
   <div class="nav-section">การเงิน</div>
   <button class="nav-btn" onclick="nav('payments',this)"><i class="ti ti-credit-card"></i>รายรับ</button>
+  <div class="nav-section">บริการสมาชิก</div>
+  <button class="nav-btn" onclick="nav('mycheck',this)"><i class="ti ti-id-badge-2"></i>เช็คข้อมูลสมาชิก</button>
   <div class="sidebar-bottom">
     <div class="staff-chip">
       <div class="staff-avatar">I</div>
@@ -238,6 +240,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-line"></i>รายรับ 30 วัน</div></div><div style="position:relative;height:200px" id="pay-chart-wrap"><canvas id="payChart"></canvas></div></div>
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-receipt"></i>รายรับล่าสุด</div></div><div id="pay-list"><div class="page-spinner"><div class="spinner"></div></div></div><button class="btn btn-orange btn-full" style="margin-top:12px" onclick="openModal('modal-payment')"><i class="ti ti-plus"></i>บันทึกรายรับ</button></div>
       </div>
+    </div>
+    <div id="page-mycheck" class="page">
+      <div class="card mb">
+        <div class="card-hd"><div class="card-title"><i class="ti ti-search"></i>ค้นหาด้วยชื่อสมาชิก</div></div>
+        <input type="text" class="finput" id="mc-search" placeholder="พิมพ์ชื่อหรือนามสกุลสมาชิก…" oninput="searchMyInfo(this.value)">
+        <div id="mc-results" style="margin-top:8px"></div>
+      </div>
+      <div id="mc-detail"><div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div></div>
     </div>
   </div>
 </div>
@@ -344,7 +354,7 @@ let amountsHidden=false;
 function getLocalDate(date=new Date()){return date.toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});}
 async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});const data=await res.json();if(!res.ok)throw new Error(data.error||'เกิดข้อผิดพลาด');return data;}
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
-const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน']};
+const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน'],mycheck:['เช็คข้อมูลสมาชิก','ค้นหาและดูข้อมูลส่วนตัวของสมาชิก']};
 
 function nav(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -375,7 +385,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 function switchTab(btn,id){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['tab-today','tab-history'].forEach(t=>document.getElementById(t).style.display='none');document.getElementById(id).style.display='block';if(id==='tab-history')loadSessionHistory();}
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-function loadPage(id){if(id==='dashboard')loadDashboard();if(id==='members')loadMembers();if(id==='packages')loadPackages();if(id==='sessions')loadSessions();if(id==='booking')loadBookings();if(id==='payments')loadPayments();}
+function loadPage(id){if(id==='dashboard')loadDashboard();if(id==='members')loadMembers();if(id==='packages')loadPackages();if(id==='sessions')loadSessions();if(id==='booking')loadBookings();if(id==='payments')loadPayments();if(id==='mycheck')resetMyCheck();}
 const DAYS_TH=['จ','อ','พ','พฤ','ศ','ส','อา'];
 const pkgColors={PT_hours:'#e85d26',monthly:'#2563b0',class_sessions:'#2a7d4f',bundle:'#6d3fa0'};
 const pkgLabels={PT_hours:'PT ชั่วโมง',monthly:'รายเดือน',class_sessions:'คลาสกลุ่ม',bundle:'บันเดิล'};
@@ -523,14 +533,6 @@ async function doDelete(type,id){
     closeModal('modal-confirm-delete');toast('ลบข้อมูลแล้ว');
     if(type==='member'){loadMembers();populateSelects();}
     else{loadPackages();populateSelects();}
-  }catch(e){toast(e.message,true);}
-}
-
-async function loadSessions(){
-  try{
-    const today=getLocalDate();const rows=await api('/api/sessions?date='+today);
-    const sb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':'badge-blue">นัดไว้';
-    document.getElementById('sessions-body').innerHTML=rows.length?rows.map(s=>`<tr><td style="font-weight:600">${String(s.session_time||'').slice(0,5)}</td><td><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic||''}</div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td><span class="badge ${sb(s.status)}</span></td><td>${s.status==='upcoming'||s.status==='active'?`<button class="btn btn-orange btn-sm" onclick="markDone(${s.id},this)"><i class="ti ti-check"></i>เสร็จ</button>`:''}</td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
   }catch(e){toast(e.message,true);}
 }
 
@@ -735,6 +737,79 @@ async function checkHealth(){
   const el=document.getElementById('db-status');
   try{await api('/api/health');el.className='db-status db-ok';el.innerHTML='<i class="ti ti-database"></i><span>Database เชื่อมต่อแล้ว</span>';}
   catch(e){el.className='db-status db-err';el.innerHTML='<i class="ti ti-database-off"></i><span>Database ออฟไลน์</span>';}
+}
+
+let mcSearchTimer=null;
+let mcSelectedId=null;
+
+function resetMyCheck(){
+  const search=document.getElementById('mc-search');
+  if(search)search.value='';
+  document.getElementById('mc-results').innerHTML='';
+  document.getElementById('mc-detail').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>';
+  mcSelectedId=null;
+}
+
+function searchMyInfo(q){
+  clearTimeout(mcSearchTimer);
+  if(mcSelectedId){mcSelectedId=null;document.getElementById('mc-detail').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>';}
+  const resultsEl=document.getElementById('mc-results');
+  if(!q||q.trim().length<2){resultsEl.innerHTML='';return;}
+  mcSearchTimer=setTimeout(async()=>{
+    try{
+      const rows=await api('/api/members?q='+encodeURIComponent(q.trim()));
+      if(!rows.length){resultsEl.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 2px">ไม่พบชื่อนี้ในระบบ ลองตรวจสอบการสะกดอีกครั้ง</div>';return;}
+      resultsEl.innerHTML=rows.map(m=>`<div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
+          <div class="av-row" style="flex:1"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone||''}</div></div></div>
+          <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
+        </div>`).join('');
+    }catch(e){toast(e.message,true);}
+  },300);
+}
+
+async function loadMyInfo(id){
+  mcSelectedId=id;
+  const detailEl=document.getElementById('mc-detail');
+  detailEl.innerHTML='<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
+  try{
+    const[members,sessions]=await Promise.all([api('/api/members'),api('/api/sessions')]);
+    const m=members.find(x=>x.id===id);
+    if(!m){detailEl.innerHTML='';return;}
+    const todayIso=getLocalDate();
+    const today=new Date(todayIso);
+    const startIso=(m.start_date||'').toString().slice(0,10);
+    const expiryIso=(m.expiry_date||'').toString().slice(0,10);
+    const start=startIso?new Date(startIso):null;
+    const expiry=expiryIso?new Date(expiryIso):null;
+    const daysUsed=start?Math.max(0,Math.round((today-start)/86400000)):null;
+    const daysLeft=expiry?Math.round((expiry-today)/86400000):null;
+    const hu=m.hours_total!=null?m.hours_total-(m.hours_used||0):null;
+    const pct=m.hours_total?Math.round((hu/m.hours_total)*100):null;
+    const sb=s=>s==='active'?'badge-green">แอคทีฟ':s==='expiring'?'badge-amber">ใกล้หมด':s==='expired'?'badge-red">หมดอายุ':'badge-gray">ไม่ระบุ';
+
+    const mySessions=sessions
+      .filter(s=>(s.member_id!=null?s.member_id===id:(s.fname===m.fname&&s.lname===m.lname))&&s.status==='done')
+      .sort((a,b)=>((b.session_date||'')+String(b.session_time||'')).localeCompare((a.session_date||'')+String(a.session_time||'')));
+
+    detailEl.innerHTML=`
+      <div class="card mb">
+        <div class="card-hd">
+          <div class="card-title"><i class="ti ti-id-badge-2"></i>${m.fname} ${m.lname}</div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status||'active')}</span><button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button></div>
+        </div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:0">
+          <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">แพ็กเกจปัจจุบัน</div><div class="kpi-val" style="font-size:17px">${m.pkg_name||'— ไม่มีแพ็กเกจ —'}</div></div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">วันหมดอายุ</div><div class="kpi-val" style="font-size:17px">${expiryIso||'—'}</div><div class="kpi-sub">${daysLeft!=null?(daysLeft>=0?'เหลืออีก '+daysLeft+' วัน':'เกินกำหนด '+Math.abs(daysLeft)+' วัน'):''}</div></div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">ใช้งานมาแล้ว</div><div class="kpi-val" style="font-size:17px">${daysUsed!=null?daysUsed+' วัน':'—'}</div><div class="kpi-sub">เริ่มใช้ ${startIso||'—'}</div></div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">ชั่วโมงคงเหลือ</div><div class="kpi-val" style="font-size:17px">${hu!=null?hu.toFixed(1)+' / '+m.hours_total:'—'}</div>${hu!=null?`<div class="pkg-bar"><div class="pkg-fill" style="width:${Math.max(0,pct)}%;background:${pct<20?'var(--red)':pct<40?'var(--amber)':'var(--green)'}"></div></div>`:''}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นที่เทรนเสร็จแล้ว</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
+        <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th></tr></thead>
+        <tbody>${mySessions.length?mySessions.map(s=>`<tr><td>${(s.session_date||'').toString().slice(0,10)}</td><td>${String(s.session_time||'').slice(0,5)||'—'}</td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic||'—'}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่นที่เสร็จแล้ว</td></tr>'}</tbody></table>
+      </div>`;
+  }catch(e){toast(e.message,true);detailEl.innerHTML='';}
 }
 
 const todayStr=getLocalDate();
