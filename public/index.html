@@ -144,9 +144,42 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 @media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
+/* LOGIN PAGE */
+#login-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.login-card{background:var(--surface);border-radius:var(--r-xl);padding:2.5rem 2rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.login-logo{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:1.75rem}
+.login-logo-mark{width:52px;height:52px;background:var(--orange);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff}
+.login-logo-name{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--text)}
+.login-logo-name span{color:var(--orange)}
+.login-sub{font-size:12.5px;color:var(--muted);text-align:center;margin-top:2px}
+.login-error{display:none;align-items:center;gap:7px;background:var(--red-lt);color:var(--red);font-size:12.5px;font-weight:500;padding:9px 12px;border-radius:var(--r-md);margin-bottom:14px}
+.login-error.show{display:flex}
+.app-hidden{display:none!important}
+
 </style>
 </head>
 <body>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark"><i class="ti ti-barbell"></i></div>
+      <div class="login-logo-name">Issara<span>Studio</span></div>
+      <div class="login-sub">เข้าสู่ระบบเพื่อจัดการสตูดิโอ</div>
+    </div>
+    <div class="login-error" id="login-error"><i class="ti ti-alert-circle"></i><span id="login-error-msg">ผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</span></div>
+    <div class="fgroup">
+      <label class="flabel">ชื่อผู้ใช้</label>
+      <input type="text" class="finput" id="login-user" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div class="fgroup">
+      <label class="flabel">รหัสผ่าน</label>
+      <input type="password" class="finput" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-orange btn-full" style="margin-top:6px" onclick="doLogin()"><i class="ti ti-login-2"></i>เข้าสู่ระบบ</button>
+  </div>
+</div>
+<div id="app-root" class="app-hidden">
 <aside class="sidebar" id="sidebar">
 <div class="logo" style="justify-content:center">
   <img src="/logo.png" alt="Issara Studio" style="height:48px;width:auto">
@@ -166,6 +199,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div class="staff-chip">
       <div class="staff-avatar">I</div>
       <div><div class="staff-name">Issara Studio</div><div class="staff-role"></div></div>
+      <button class="tb-btn btn-sm" style="margin-left:auto;padding:6px 9px" onclick="doLogout()" title="ออกจากระบบ"><i class="ti ti-logout"></i></button>
     </div>
   </div>
 </aside>
@@ -360,11 +394,50 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 </div>
 
 <div class="toast" id="toast"><i class="ti ti-circle-check"></i><span id="toast-msg">สำเร็จ</span></div>
+</div><!-- /app-root -->
 
 <script>
 const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
 let amountsHidden=false;
-
+/* ===== LOGIN ===== */
+const APP_USERS={ 'admin':'issara2026', 'staff':'studio123' }; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username:password)
+function showApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-root').classList.remove('app-hidden');
+  initApp();
+}
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-error');
+  if(!u||!p){
+    document.getElementById('login-error-msg').textContent='กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
+    errEl.classList.add('show');
+    return;
+  }
+  if(APP_USERS[u]&&APP_USERS[u]===p){
+    errEl.classList.remove('show');
+    try{sessionStorage.setItem('issara_auth_user',u);}catch(e){}
+    showApp();
+  }else{
+    document.getElementById('login-error-msg').textContent='ผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+    errEl.classList.add('show');
+    document.getElementById('login-pass').value='';
+    document.getElementById('login-pass').focus();
+  }
+}
+function doLogout(){
+  try{sessionStorage.removeItem('issara_auth_user');}catch(e){}
+  location.reload();
+}
+(function checkExistingSession(){
+  let savedUser=null;
+  try{savedUser=sessionStorage.getItem('issara_auth_user');}catch(e){}
+  if(savedUser&&APP_USERS[savedUser]){
+    document.addEventListener('DOMContentLoaded',showApp);
+  }
+})();
+/* ===== END LOGIN ===== */
 function getLocalDate(date=new Date()){return date.toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});}
 async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});const data=await res.json();if(!res.ok)throw new Error(data.error||'เกิดข้อผิดพลาด');return data;}
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
@@ -868,7 +941,8 @@ async function loadMyInfo(id){
       </div>`;
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
 }
-
+function initApp(){
+  document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 const todayStr=getLocalDate();
 ['s-date','b-date','p-date','m-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr;});
 updateCalLabel();
