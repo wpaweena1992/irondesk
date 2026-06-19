@@ -214,8 +214,16 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <button class="tab-btn active" onclick="switchTab(this,'tab-today')">วันนี้</button>
         <button class="tab-btn" onclick="switchTab(this,'tab-history')">ประวัติ</button>
       </div>
-      <div id="tab-today"><div class="card"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
-      <div id="tab-history" style="display:none"><div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div></div>
+      <div id="tab-today"><div class="card"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div 	class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
+      	<div id="tab-history" style="display:none">
+        	<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+          	<input type="text" class="finput" id="hist-search-name" style="max-width:220px" placeholder="ค้นหาชื่อสมาชิก…" oninput="filterHistory()">
+          	<input type="date" class="finput" id="hist-search-date" style="max-width:180px" onchange="filterHistory()">
+          	<button class="btn btn-ghost btn-sm" onclick="document.getElementById('hist-search-name').value='';document.getElementById('hist-search-date').value='';filterHistory()"><i class="ti ti-x"></i>ล้างค้นหา</button>
+          	<span id="hist-count" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
+        	</div>
+        <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+      </div>
     </div>
     <div id="page-booking" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
@@ -569,11 +577,26 @@ async function doDelete(type,id){
   }catch(e){toast(e.message,true);}
 }
 
+let _histRows=[];
+function filterHistory(){
+  const q=(document.getElementById('hist-search-name').value||'').trim().toLowerCase();
+  const d=(document.getElementById('hist-search-date').value||'').trim();
+  const hsb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
+  const filtered=_histRows.filter(s=>{
+    const name=(s.fname+' '+s.lname).toLowerCase();
+    const dateMatch=!d||(s.session_date||'').toString().slice(0,10)===d;
+    const nameMatch=!q||name.includes(q);
+    return dateMatch&&nameMatch;
+  });
+  document.getElementById('hist-count').textContent=filtered.length+' รายการ';
+  document.getElementById('hist-body').innerHTML=filtered.length?filtered.map(s=>`<tr><td style="font-size:13px">${(s.session_date||'').toString().slice(0,10)}</td><td style="font-size:13px;font-weight:600">${String(s.session_time||'').slice(0,5)||'—'}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used}</td><td><span class="badge ${hsb(s.status)}</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ไม่พบรายการที่ค้นหา</td></tr>';
+}
 async function loadSessionHistory(){
   try{
     const rows=await api('/api/sessions');
-    const hsb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
-    document.getElementById('hist-body').innerHTML=rows.slice(0,20).map(s=>`<tr><td style="font-size:13px">${(s.session_date||'').toString().slice(0,10)}</td><td style="font-size:13px;font-weight:600">${String(s.session_time||'').slice(0,5)||'—'}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used}</td><td><span class="badge ${hsb(s.status)}</span></td></tr>`).join('');
+    _histRows=rows.sort((a,b)=>((b.session_date||'')+String(b.session_time||'')).localeCompare((a.session_date||'')+String(a.session_time||'')));
+      filterHistory();
+
     if(!charts.sessionHistChart){
       const labels=[],vals=[];for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);const iso=getLocalDate(dt);vals.push(rows.filter(r=>(r.session_date||'').toString().slice(0,10)===iso).length);}
       charts.sessionHistChart=new Chart(document.getElementById('sessionHistChart'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'rgba(232,93,38,.6)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},stepSize:1}}}}});
