@@ -938,7 +938,7 @@ async function loadMyInfo(id){
       </div>
       <div class="card">
         <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นที่เทรนเสร็จแล้ว</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
-        <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th></tr></thead>
+        <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th><th>สถานะ</th></tr></thead>
         <tbody>${mySessions.length?mySessions.map(s=>`<tr><td>${(s.session_date||'').toString().slice(0,10)}</td><td>${String(s.session_time||'').slice(0,5)||'—'}</td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic||'—'}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่นที่เสร็จแล้ว</td></tr>'}</tbody></table>
       </div>`;
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
