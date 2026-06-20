@@ -181,6 +181,46 @@ app.put('/api/members/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ✅ ต่ออายุแพ็กเกจ (สะสมชั่วโมงเก่าไปกับแพ็กเกจใหม่)
+app.post('/api/members/:id/renew', async (req, res) => {
+  try {
+    const { package_id, start_date } = req.body;
+    if (!package_id || !start_date) return res.status(400).json({ error: 'กรุณาเลือกแพ็กเกจและวันเริ่ม' });
+
+    const [pkg] = await db.query(`SELECT * FROM packages WHERE id=$1`, [package_id]);
+    if (!pkg) return res.status(404).json({ error: 'ไม่พบแพ็กเกจ' });
+
+    // หาแพ็กเกจปัจจุบันของสมาชิก เพื่อดึงชั่วโมงที่เหลือมาสะสม
+    const [current] = await db.query(
+      `SELECT * FROM member_packages WHERE member_id=$1 ORDER BY created_at DESC LIMIT 1`,
+      [req.params.id]
+    );
+
+    let carryHours = 0;
+    if (current && current.hours_total != null) {
+      carryHours = Math.max(0, Number(current.hours_total) - Number(current.hours_used || 0));
+    }
+
+    const newHoursTotal = pkg.hours != null ? Number(pkg.hours) + carryHours : null;
+
+    const expiry = new Date(start_date);
+    expiry.setDate(expiry.getDate() + pkg.validity_days);
+
+    // ปิดแพ็กเกจเก่า (ถ้ามี) ไม่ให้ขึ้นซ้ำในระบบ
+    if (current) {
+      await db.query(`UPDATE member_packages SET status='renewed' WHERE id=$1`, [current.id]);
+    }
+
+    await db.query(
+      `INSERT INTO member_packages (member_id,package_id,hours_total,hours_used,sessions_total,sessions_used,start_date,expiry_date,paid,status)
+       VALUES ($1,$2,$3,0,$4,0,$5,$6,FALSE,'active')`,
+      [req.params.id, package_id, newHoursTotal, pkg.sessions || null, start_date, expiry.toISOString().split('T')[0]]
+    );
+
+    res.json({ message: 'ต่ออายุแพ็กเกจสำเร็จ', carry_hours: carryHours, new_hours_total: newHoursTotal });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.delete('/api/members/:id', async (req, res) => {
   try {
     await db.query(`UPDATE members SET active=FALSE WHERE id=$1`, [req.params.id]);

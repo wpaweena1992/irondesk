@@ -319,6 +319,20 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-member')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updateMember()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
   </div>
 </div>
+<div class="modal-backdrop" id="modal-renew">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title"><i class="ti ti-refresh"></i> ต่ออายุแพ็กเกจ</div><button class="close-btn" onclick="closeModal('modal-renew')"><i class="ti ti-x"></i></button></div>
+    <input type="hidden" id="rn-id">
+    <div class="card mb" style="background:var(--surface2);padding:.9rem 1rem" id="rn-current-info"></div>
+    <div class="fgroup"><label class="flabel">แพ็กเกจใหม่</label><select class="fselect" id="rn-pkg" onchange="previewRenew()"><option value="">— เลือกแพ็กเกจ —</option></select></div>
+    <div class="fgroup"><label class="flabel">วันเริ่มต่ออายุ</label><input type="date" class="finput" id="rn-start" onchange="previewRenew()"></div>
+    <div class="alert-item" style="background:var(--green-lt);display:none" id="rn-preview">
+      <i class="ti ti-info-circle alert-icon" style="color:var(--green)"></i>
+      <div style="font-size:13px" id="rn-preview-text"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-renew')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitRenew()"><i class="ti ti-refresh"></i>ยืนยันต่ออายุ</button></div>
+  </div>
+</div>
 <div class="modal-backdrop" id="modal-session">
   <div class="modal">
     <div class="modal-head"><div class="modal-title">บันทึกเซสชั่น</div><button class="close-btn" onclick="closeModal('modal-session')"><i class="ti ti-x"></i></button></div>
@@ -548,6 +562,7 @@ async function loadMembers(q='',status=''){
         <td><span class="badge ${sb(m.status||'active')}</span></td>
         <td><div style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-sm" onclick="openModal('modal-session')"><i class="ti ti-clock-play"></i>เซสชั่น</button>
+	  <button class="btn btn-ghost btn-sm" onclick="openRenew(${m.id})" title="ต่ออายุ"><i class="ti ti-refresh"></i></button>
           <button class="btn btn-ghost btn-sm" onclick="editMember(${m.id})" title="แก้ไข"><i class="ti ti-edit"></i></button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete('member',${m.id},'${m.fname} ${m.lname}')" title="ลบ"><i class="ti ti-trash"></i></button>
         </div></td>
@@ -590,6 +605,61 @@ async function updateMember(){
   }catch(e){toast(e.message,true);}
 }
 
+let _renewMembersCache=[];
+
+async function openRenew(id){
+  try{
+    const[members,packages]=await Promise.all([api('/api/members'),api('/api/packages')]);
+    _renewMembersCache=members;
+    const m=members.find(x=>x.id===id);if(!m)return;
+
+    document.getElementById('rn-id').value=m.id;
+    const hu=m.hours_total!=null?(m.hours_total-(m.hours_used||0)):null;
+    document.getElementById('rn-current-info').innerHTML=`
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:4px">${m.fname} ${m.lname}</div>
+      <div style="font-size:12.5px;color:var(--muted)">แพ็กเกจปัจจุบัน: ${m.pkg_name||'— ไม่มี —'}</div>
+      <div style="font-size:12.5px;color:var(--muted)">ชั่วโมงคงเหลือ: <b style="color:var(--text)">${hu!=null?hu.toFixed(1)+' ชม.':'—'}</b> ${m.expiry_date?'· หมดอายุ '+m.expiry_date:''}</div>`;
+
+    document.getElementById('rn-pkg').innerHTML='<option value="">— เลือกแพ็กเกจ —</option>'+
+      packages.map(p=>`<option value="${p.id}">${p.name} — ฿${Number(p.price).toLocaleString()}</option>`).join('');
+    document.getElementById('rn-start').value=getLocalDate();
+    document.getElementById('rn-preview').style.display='none';
+
+    openModal('modal-renew');
+  }catch(e){toast(e.message,true);}
+}
+
+async function previewRenew(){
+  const id=Number(document.getElementById('rn-id').value);
+  const pkgId=document.getElementById('rn-pkg').value;
+  const previewEl=document.getElementById('rn-preview');
+  if(!pkgId){previewEl.style.display='none';return;}
+  try{
+    const packages=await api('/api/packages');
+    const pkg=packages.find(p=>p.id==pkgId);
+    const m=_renewMembersCache.find(x=>x.id===id);
+    if(!pkg||!m)return;
+    const carry=m.hours_total!=null?Math.max(0,m.hours_total-(m.hours_used||0)):0;
+    const newTotal=pkg.hours!=null?Number(pkg.hours)+carry:null;
+    document.getElementById('rn-preview-text').innerHTML=newTotal!=null
+      ?`ชั่วโมงเดิม ${carry.toFixed(1)} ชม. + แพ็กเกจใหม่ ${pkg.hours} ชม. = รวม <b>${newTotal.toFixed(1)} ชม.</b>`
+      :`แพ็กเกจนี้ไม่มีชั่วโมง (รายเดือน/ไม่จำกัด)`;
+    previewEl.style.display='flex';
+  }catch(e){}
+}
+
+async function submitRenew(){
+  const id=document.getElementById('rn-id').value;
+  const package_id=document.getElementById('rn-pkg').value;
+  const start_date=document.getElementById('rn-start').value;
+  if(!package_id||!start_date){toast('กรุณาเลือกแพ็กเกจและวันเริ่ม',true);return;}
+  try{
+    const r=await api('/api/members/'+id+'/renew',{method:'POST',body:{package_id,start_date}});
+    closeModal('modal-renew');
+    toast('ต่ออายุแพ็กเกจสำเร็จ'+(r.carry_hours>0?` (สะสม ${r.carry_hours.toFixed(1)} ชม.)`:''));
+    loadMembers();populateSelects();
+  }catch(e){toast(e.message,true);}
+}
 async function loadPackages(){
   try{
     const pkgs=await api('/api/packages');
