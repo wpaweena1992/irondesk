@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--surface3:#e8e7e0;--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.15);--text:#1a1a18;--muted:#7a7a72;--faint:#b0afa8;--ink:#2c2c28;--orange:#e85d26;--orange-lt:#fdf0ea;--green:#2a7d4f;--green-lt:#e8f5ee;--blue:#2563b0;--blue-lt:#e8f0fb;--amber:#b86e00;--amber-lt:#fef3e2;--red:#c0392b;--red-lt:#fdecea;--purple:#6d3fa0;--purple-lt:#f2ecfb;--r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;--shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04)}
+html,body{overflow-x:hidden;width:100%}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px;line-height:1.5}
 .sidebar{width:220px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .3s}
@@ -27,7 +28,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .staff-avatar{width:32px;height:32px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
 .staff-name{font-size:13px;color:#fff;font-weight:500}
 .staff-role{font-size:11px;color:rgba(255,255,255,.45)}
-.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;max-width:calc(100% - 220px);overflow-x:hidden}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.9rem 1.75rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .topbar-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600}
 .topbar-sub{font-size:12px;color:var(--muted);margin-top:1px}
@@ -240,7 +241,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
           <option value="">สถานะทั้งหมด</option><option value="active">แอคทีฟ</option><option value="expiring">ใกล้หมด</option><option value="expired">หมดอายุ</option>
         </select>
       </div>
-      <div class="card"><table class="tbl"><thead><tr><th>สมาชิก</th><th>เบอร์โทร</th><th>แพ็กเกจ</th><th>ชั่วโมงคงเหลือ</th><th>หมดอายุ</th><th>สถานะ</th><th></th></tr></thead><tbody id="members-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody></table></div>
+      <div class="card" style="overflow-x:auto"><table class="tbl" style="min-width:900px"><thead><tr><th>สมาชิก</th><th>เบอร์โทร</th><th>แพ็กเกจ</th><th>ชั่วโมงคงเหลือ</th><th>หมดอายุ</th><th>สถานะ</th><th></th></tr></thead><tbody id="members-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody></table></div>
     </div>
     <div id="page-packages" class="page">
       <div class="g32 mb" id="pkg-grid"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
