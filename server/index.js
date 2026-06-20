@@ -206,10 +206,10 @@ app.post('/api/members/:id/renew', async (req, res) => {
     const expiry = new Date(start_date);
     expiry.setDate(expiry.getDate() + pkg.validity_days);
 
-    // ปิดแพ็กเกจเก่า (ถ้ามี) ไม่ให้ขึ้นซ้ำในระบบ
-    if (current) {
-      await db.query(`UPDATE member_packages SET status='renewed' WHERE id=$1`, [current.id]);
-    }
+// ปิดแพ็กเกจเก่า (ถ้ามี) ไม่ให้ขึ้นซ้ำในระบบ — ใช้ 'expired' เพราะ constraint ไม่อนุญาต 'renewed'
+if (current) {
+  await db.query(`UPDATE member_packages SET status='expired' WHERE id=$1`, [current.id]);
+}
 
     await db.query(
       `INSERT INTO member_packages (member_id,package_id,hours_total,hours_used,sessions_total,sessions_used,start_date,expiry_date,paid,status)
