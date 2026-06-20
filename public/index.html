@@ -451,7 +451,7 @@ function setSessionRole(u){
   const roleEl=document.querySelector('.staff-role');
   if(avatarEl)avatarEl.textContent=(u||'I')[0].toUpperCase();
   if(nameEl)nameEl.textContent=u;
-  if(roleEl)roleEl.textContent=isStaffRestricted?'พนักงาน · ทำรายการได้เฉพาะตารางนัด':'แอดมิน · สิทธิ์เต็ม';
+  if(roleEl)roleEl.textContent=isStaffRestricted?'สมาชิก · ทำรายการได้เฉพาะตารางนัด':'แอดมิน · สิทธิ์เต็ม';
 }
 
 function showApp(){
