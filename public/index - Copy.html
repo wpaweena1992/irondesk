@@ -216,8 +216,8 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       <div class="db-status db-checking" id="db-status"><i class="ti ti-database"></i><span>กำลังเชื่อมต่อ...</span></div>
       <button class="tb-btn hamburger-btn" onclick="openSidebar()"><i class="ti ti-menu-2"></i></button>
       <button class="tb-btn" id="btn-toggle-pay" style="display:none" onclick="toggleAmounts()"><i class="ti ti-eye-off"></i><span id="btn-toggle-pay-label">ซ่อนยอด</span></button>
-      <button class="tb-btn" id="btn-add-session" onclick="openModal('modal-session')"><i class="ti ti-plus"></i>เพิ่มเซสชั่น</button>
-      <button class="tb-btn primary" id="btn-add-member" onclick="openModal('modal-member')"><i class="ti ti-user-plus"></i>เพิ่มสมาชิก</button>
+      <button class="tb-btn" onclick="openModal('modal-session')"><i class="ti ti-plus"></i>เพิ่มเซสชั่น</button>
+      <button class="tb-btn primary" onclick="openModal('modal-member')"><i class="ti ti-user-plus"></i>เพิ่มสมาชิก</button>
     </div>
   </header>
   <div class="content">
@@ -281,7 +281,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem" id="pay-kpis"><div class="page-spinner"><div class="spinner"></div></div></div>
       <div class="g2 mb">
         <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-line"></i>รายรับ 30 วัน</div></div><div style="position:relative;height:200px" id="pay-chart-wrap"><canvas id="payChart"></canvas></div></div>
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-receipt"></i>รายรับล่าสุด</div></div><div id="pay-list"><div class="page-spinner"><div class="spinner"></div></div></div><button class="btn btn-orange btn-full" id="btn-add-payment" style="margin-top:12px" onclick="openModal('modal-payment')"><i class="ti ti-plus"></i>บันทึกรายรับ</button></div>
+        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-receipt"></i>รายรับล่าสุด</div></div><div id="pay-list"><div class="page-spinner"><div class="spinner"></div></div></div><button class="btn btn-orange btn-full" style="margin-top:12px" onclick="openModal('modal-payment')"><i class="ti ti-plus"></i>บันทึกรายรับ</button></div>
       </div>
     </div>
     <div id="page-mycheck" class="page">
@@ -416,44 +416,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
 let amountsHidden=false;
 /* ===== LOGIN ===== */
-// แต่ละ username เก็บเป็น "รายการรหัสผ่าน" (array) เพื่อรองรับกรณีชื่อซ้ำ (เช่น Kae มี 2 รหัส) โดยไม่ทับกันแบบเดิม
-const APP_USERS={
-  'admin'  :['issara2026'],
-  'staff'  :['studio123','issara15'],
-  'Nan'    :['issara00'],
-  'Chef'   :['issara01'],
-  'Chorf'  :['issara02'],
-  'Pan'    :['issara03'],
-  'New'    :['issara04'],
-  'Bam'    :['issara04'],
-  'Joe'    :['issara05'],
-  'Ireane' :['issara06'],
-  'Mac'    :['issara07'],
-  'Kae'    :['issara08','issara12'],
-  'Tuk'    :['issara09'],
-  'Bom'    :['issara10'],
-  'O'      :['issara11'],
-  'Nong'   :['issara13'],
-  'PaPing' :['issara14']
-}; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: [รหัสผ่าน, ...])
-
-// username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
-// username อื่นๆ ทั้งหมด = พนักงานทั่วไป → ทำรายการ (เพิ่ม/แก้ไข/ลบ) ได้เฉพาะหน้า "ตารางนัด" เท่านั้น หน้าอื่นดูได้อย่างเดียว
-const ADMIN_USERS=['admin'];
-let currentUser=null;
-let isStaffRestricted=false;
-
-function setSessionRole(u){
-  currentUser=u;
-  isStaffRestricted=!ADMIN_USERS.includes(u);
-  const avatarEl=document.querySelector('.staff-avatar');
-  const nameEl=document.querySelector('.staff-name');
-  const roleEl=document.querySelector('.staff-role');
-  if(avatarEl)avatarEl.textContent=(u||'I')[0].toUpperCase();
-  if(nameEl)nameEl.textContent=u;
-  if(roleEl)roleEl.textContent=isStaffRestricted?'พนักงาน · ทำรายการได้เฉพาะตารางนัด':'แอดมิน · สิทธิ์เต็ม';
-}
-
+const APP_USERS={ 'admin':'issara2026', 'staff':'studio123', 'Nan':'issara00', 'Chef':'issara01', 'Chorf':'issara02'
+, 'Pan':'issara03', 'New':'issara04', 'Bam':'issara04', 'Joe':'issara05', 'Ireane':'issara06', 'Mac':'issara07'
+, 'Kae':'issara08', 'Tuk':'issara09', 'Bom':'issara10', 'O':'issara11', 'Kae':'issara12', 'Nong':'issara13'
+, 'PaPing':'issara14', 'staff':'issara15'}; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username:password)
 function showApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app-root').classList.remove('app-hidden');
@@ -468,10 +434,9 @@ function doLogin(){
     errEl.classList.add('show');
     return;
   }
-  if(APP_USERS[u]&&APP_USERS[u].includes(p)){
+  if(APP_USERS[u]&&APP_USERS[u]===p){
     errEl.classList.remove('show');
     try{sessionStorage.setItem('issara_auth_user',u);}catch(e){}
-    setSessionRole(u);
     showApp();
   }else{
     document.getElementById('login-error-msg').textContent='ผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
@@ -488,7 +453,6 @@ function doLogout(){
   let savedUser=null;
   try{savedUser=sessionStorage.getItem('issara_auth_user');}catch(e){}
   if(savedUser&&APP_USERS[savedUser]){
-    setSessionRole(savedUser);
     document.addEventListener('DOMContentLoaded',showApp);
   }
 })();
@@ -596,12 +560,12 @@ async function loadMembers(q='',status=''){
         <td>${m.phone}</td><td>${m.pkg_name||'—'}</td><td>${hh}</td>
         <td style="font-size:13px">${m.expiry_date||'—'}</td>
         <td><span class="badge ${sb(m.status||'active')}</span></td>
-        <td>${isStaffRestricted?'<span style="color:var(--faint);font-size:12px">ดูอย่างเดียว</span>':`<div style="display:flex;gap:4px">
+        <td><div style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-sm" onclick="openModal('modal-session')"><i class="ti ti-clock-play"></i>เซสชั่น</button>
 	    <button class="btn btn-ghost btn-sm" onclick="openRenew(${m.id})" title="ต่ออายุ"><i class="ti ti-refresh"></i></button>
           <button class="btn btn-ghost btn-sm" onclick="editMember(${m.id})" title="แก้ไข"><i class="ti ti-edit"></i></button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete('member',${m.id},'${m.fname} ${m.lname}')" title="ลบ"><i class="ti ti-trash"></i></button>
-        </div>`}</td>
+        </div></td>
       </tr>`;
     }).join('');
   }catch(e){toast(e.message,true);}
@@ -707,11 +671,11 @@ async function loadPackages(){
         <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:${colors[p.type]||'var(--orange)'}">฿${Number(p.price).toLocaleString()}</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:12px">หมดอายุ ${p.validity_days} วัน${p.hours?` · ${p.hours} ชม.`:''}${p.sessions?` · ${p.sessions} ครั้ง`:''}</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ใช้งาน <b style="color:var(--text)">${p.member_count}</b> สมาชิก</div>
-        ${isStaffRestricted?'':`<div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editPackage(${p.id})"><i class="ti ti-edit"></i>แก้ไข</button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete('package',${p.id},'${p.name}')"><i class="ti ti-trash"></i></button>
-        </div>`}
-      </div>`).join('')+(isStaffRestricted?'':`<div class="card" style="border:2px dashed var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;min-height:160px" onclick="openModal('modal-package')"><i class="ti ti-plus" style="font-size:24px;color:var(--faint)"></i><span style="font-size:13px;color:var(--muted)">เพิ่มแพ็กเกจใหม่</span></div>`);
+        </div>
+      </div>`).join('')+`<div class="card" style="border:2px dashed var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;min-height:160px" onclick="openModal('modal-package')"><i class="ti ti-plus" style="font-size:24px;color:var(--faint)"></i><span style="font-size:13px;color:var(--muted)">เพิ่มแพ็กเกจใหม่</span></div>`;
   }catch(e){toast(e.message,true);}
 }
 
@@ -791,7 +755,6 @@ async function loadSessionHistory(){
 async function loadSessions(){
   try{
     const today=getLocalDate();const rows=await api('/api/sessions?date='+today);
-    const sb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
     document.getElementById('sessions-body').innerHTML=rows.length?rows.map(s=>`
       <tr>
         <td style="font-weight:600">${String(s.session_time||'').slice(0,5)}</td>
@@ -800,12 +763,12 @@ async function loadSessions(){
         <td>${s.trainer_name||'—'}</td>
         <td>${s.hours_used} ชม.</td>
         <td>
-          ${isStaffRestricted?`<span class="badge ${sb(s.status)}</span>`:`<select class="fselect" style="padding:4px 8px; font-size:12.5px; width:auto; cursor:pointer;" onchange="updateSessionStatus(${s.id}, this.value)">
+          <select class="fselect" style="padding:4px 8px; font-size:12.5px; width:auto; cursor:pointer;" onchange="updateSessionStatus(${s.id}, this.value)">
             <option value="upcoming" ${s.status==='upcoming'?'selected':''}>นัดไว้</option>
             <option value="active" ${s.status==='active'?'selected':''}>กำลังเทรน</option>
             <option value="done" ${s.status==='done'?'selected':''}>เสร็จแล้ว</option>
             <option value="cancelled" ${s.status==='cancelled'?'selected':''}>ยกเลิก</option>
-          </select>`}
+          </select>
         </td>
         <td></td>
       </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
@@ -1053,18 +1016,8 @@ async function loadMyInfo(id){
       </div>`;
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
 }
-function applyPermissions(){
-  // พนักงานทั่วไป (ไม่ใช่ ADMIN_USERS) ทำรายการ (เพิ่ม/แก้ไข/ลบ) ได้แค่หน้า "ตารางนัด" เท่านั้น
-  // หน้าอื่นๆ ทุกปุ่มที่ใช้เพิ่ม/แก้ไข/ลบข้อมูลจะถูกซ่อนไว้ ดูข้อมูลได้ตามปกติ
-  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.style.display=isStaffRestricted?'none':'';
-  });
-}
-
 function initApp(){
   document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-  applyPermissions();
 const todayStr=getLocalDate();
 ['s-date','b-date','p-date','m-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr;});
 updateCalLabel();
