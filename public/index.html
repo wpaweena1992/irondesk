@@ -141,8 +141,45 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .db-checking{background:var(--surface2);color:var(--muted)}
 .blurred{filter:blur(6px);transition:filter .25s;user-select:none;pointer-events:none}
 .blurred-chart{filter:blur(8px);transition:filter .25s}
-@media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
+    @media(max-width:960px) {
+        .sidebar {
+            transform: translateX(-100%)
+        }
+        /* ซ่อน Sidebar อัตโนมัติ */
+        .main {
+            margin-left: 0
+        }
+        /* ขยายเนื้อหาให้เต็มพื้นที่ */
+        .hamburger-btn {
+            display: flex !important
+        }
+        /* แสดงปุ่มเมนู */
+        .g2, .g3, .g32 {
+            grid-template-columns: 1fr
+        }
+        /* เปลี่ยน Grid จากหลายคอลัมน์เป็นคอลัมน์เดียว */
+        .kpi-grid {
+            grid-template-columns: repeat(2,1fr)
+        }
+    }
+    @media(max-width:600px) {
+        .content {
+            padding: 1rem
+        }
+        /* ปรับระยะห่างขอบ */
+        .topbar {
+            padding: .75rem 1rem
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2,1fr)
+        }
+        /* ปรับจำนวนคอลัมน์ของ KPI */
+        .frow {
+            grid-template-columns: 1fr
+        }
+        /* ปรับฟอร์มให้เรียงเป็นคอลัมน์เดียว */
+    }
 @media(max-width:600px) {
     #page-mycheck .card {
         padding: 10px; /* ปรับ Padding ให้เหมาะกับหน้าจอมือถือ */
