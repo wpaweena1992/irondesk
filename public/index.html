@@ -430,7 +430,7 @@ const APP_USERS={
   'Tuk'     :['issara08'],
   'Bom&Kram'  :['issara09'],
   'O&Kae'   : ['issara10'],
-  'Ja'     : ['issara11'],
+  'Ja'      : ['issara11'],
   'PaPing' :['issara12'],
   'Ariel&Jinglebell': ['issara13']
 
@@ -828,7 +828,24 @@ async function updateSessionStatus(id, status){
 
 async function submitSession(){
   const member_id=document.getElementById('s-member').value;const time=document.getElementById('s-time').value;const date=document.getElementById('s-date').value;if(!member_id||!time||!date){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
-  try{await api('/api/sessions',{method:'POST',body:{member_id,trainer_id:document.getElementById('s-trainer').value||null,type:document.getElementById('s-type').value,topic:document.getElementById('s-topic').value,session_date:date,session_time:time,hours_used:document.getElementById('s-hours').value||1.0}});closeModal('modal-session');toast('บันทึกเซสชั่นแล้ว');loadSessions();}catch(e){toast(e.message,true);}
+  try{
+    // 1. สร้าง Session
+    await api('/api/sessions',{method:'POST',body:{member_id,trainer_id:document.getElementById('s-trainer').value||null,type:document.getElementById('s-type').value,topic:document.getElementById('s-topic').value,session_date:date,session_time:time,hours_used:document.getElementById('s-hours').value||1.0}});
+
+    // 2. สร้าง Booking อัตโนมัติจาก Session (sync ตารางนัด)
+    try{
+      await api('/api/bookings',{method:'POST',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('s-trainer').value||null,type:document.getElementById('s-type').value}});
+    }catch(e){console.warn('booking sync skip:',e.message);}
+
+    closeModal('modal-session');
+    toast('บันทึกเซสชั่นและอัพเดตตารางนัดแล้ว ✅');
+    loadSessions();
+
+    // 3. ถ้าปฏิทินอยู่ในเดือนเดียวกับวันที่ session → refresh ตารางนัดด้วย
+    const sDate=new Date(date);
+    if(sDate.getFullYear()===calYear&&sDate.getMonth()+1===calMonth){loadBookings();}
+
+  }catch(e){toast(e.message,true);}
 }
 
 async function loadBookings(){
@@ -988,22 +1005,22 @@ let mcSelectedId=null;
 // แมปชื่อผู้ใช้ (username) → คำค้นหาชื่อสมาชิกของตัวเองในระบบ สำหรับหน้า "เช็คข้อมูลสมาชิก"
 // พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
 // ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
-const STAFF_MEMBER_QUERY={
-'Nan' : 'พี่แนน',
-'Chef' : 'น้องเซฟ',
-'Pan' : 'พี่ป่าน',
-'New' : 'พี่นิว',
-'Ireane' : 'Ireane',
-'Mac' : 'พี่แม็ก',
-'Kae' : 'พี่เก๋(เกศสินี)',
-'Tuk' : 'พี่ตุ๊ก',
-'Bom&Kram' : 'พี่บ๋อม&พี่คราม',
-'O&Kae' : 'พี่โอ๋&พี่เก๋',
-'Nong' : 'พี่น้อง',
-'PaPing' : 'ปาปิ้ง&คุณแม่',
-'Ariel&Jinglebell' : 'แอเรียว&จิงเกอเบล',
-'Ja' : 'พี่จา'
-};
+    const STAFF_MEMBER_QUERY = {
+        'Nan': 'พี่แนน',
+        'Chef': 'น้องเซฟ',
+        'Pan': 'พี่ป่าน',
+        'New': 'พี่นิว',
+        'Ireane': 'Ireane',
+        'Mac': 'พี่แม็ก',
+        'Kae': 'พี่เก๋(เกศสินี)',
+        'Tuk': 'พี่ตุ๊ก',
+        'Bom&Kram': 'พี่บ๋อม&พี่คราม',
+        'O&Kae': 'พี่โอ๋&พี่เก๋',
+        'Nong': 'พี่น้อง',
+        'PaPing': 'ปาปิ้ง&คุณแม่',
+        'Ariel&Jinglebell': 'แอเรียว&จิงเกอเบล',
+        'Ja': 'พี่จา'
+    };
 
 async function autoLoadMyInfo(){
   const detailEl=document.getElementById('mc-detail');
@@ -1129,9 +1146,7 @@ function initApp(){
   updateCalLabel();
   document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   checkHealth();
-
   if(isStaffRestricted){
-    // non-admin → เปิดหน้า "เช็คข้อมูลสมาชิก" เป็นหน้าแรก
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById('page-mycheck').classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(b=>{
@@ -1141,8 +1156,7 @@ function initApp(){
     document.getElementById('page-title').textContent='เช็คข้อมูลสมาชิก';
     document.getElementById('page-sub').textContent='ค้นหาและดูข้อมูลส่วนตัวของสมาชิก';
     populateSelects().then(()=>initMyCheck());
-  } else {
-    // admin → เปิดหน้า "ตารางนัด" เหมือนเดิม
+  }else{
     populateSelects().then(()=>loadBookings());
   }
 }
