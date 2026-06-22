@@ -187,14 +187,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <img src="/logo.png" alt="Issara Studio" style="height:48px;width:auto">
 </div>
   <div class="nav-section">หลัก</div>
+  <button class="nav-btn" onclick="nav('packages',this)"><i class="ti ti-package"></i>แพ็กเกจ</button>
+  <button class="nav-btn active" onclick="nav('booking',this)"><i class="ti ti-calendar"></i>ตารางนัด</button>
+  <button class="nav-btn" onclick="nav('mycheck',this)"><i class="ti ti-id-badge-2"></i>เช็คข้อมูลสมาชิก</button>
+  <div class="nav-section">แอดมิน</div>
   <button class="nav-btn" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>ภาพรวม</button>
   <button class="nav-btn" onclick="nav('members',this)"><i class="ti ti-users"></i>สมาชิก</button>
-   <button class="nav-btn" onclick="nav('mycheck',this)"><i class="ti ti-id-badge-2"></i>เช็คข้อมูลสมาชิก</button>
-  <button class="nav-btn" onclick="nav('packages',this)"><i class="ti ti-package"></i>แพ็กเกจ</button>
-  <div class="nav-section">การนัด</div>
-  <button class="nav-btn" onclick="nav('sessions',this)"><i class="ti ti-clock-play"></i>เซสชั่นวันนี้</button>
-  <button class="nav-btn active" onclick="nav('booking',this)"><i class="ti ti-calendar"></i>ตารางนัด</button>
-  <div class="nav-section">การเงิน</div>
+  <button class="nav-btn" onclick="nav('sessions',this)"><i class="ti ti-clock-play"></i>เซสชั่นวันนี้</button>  
   <button class="nav-btn" onclick="nav('payments',this)"><i class="ti ti-credit-card"></i>รายรับ</button>
   
   <div class="sidebar-bottom">
@@ -434,7 +433,8 @@ const APP_USERS={
   'Bom'    :['issara10'],
   'O'      :['issara11'],
   'Nong'   :['issara13'],
-  'PaPing' :['issara14']
+  'PaPing' :['issara14'],
+  'Ja'     :['issara15']
 }; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: [รหัสผ่าน, ...])
 
 // username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
@@ -990,7 +990,20 @@ let mcSelectedId=null;
 // พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
 // ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
 const STAFF_MEMBER_QUERY={
-  'Nan':'พี่แนน'
+'Nan' : 'พี่แนน',
+'Chef' : 'น้องเซฟ',
+'Pan' : 'พี่ป่าน',
+'New' : 'พี่นิว',
+'Ireane' : 'Ireane',
+'Mac' : 'พี่แม็ก',
+'Kae' : 'พี่เก๋',
+'Tuk' : 'พี่ตุ๊ก',
+'Bom&Kram' : 'พี่บ๋อม&พี่คราม',
+'O&Kae' : 'พี่โอ๋&พี่เก๋',
+'Nong' : 'พี่น้อง',
+'PaPing' : 'ปาปิ้ง&คุณแม่',
+'Ariel&Jinglebell' : 'แอเรียว&จิงเกอเบล',
+'Ja' : 'พี่จา'
 };
 
 async function autoLoadMyInfo(){
@@ -1029,6 +1042,8 @@ function resetMyCheck(){
 
 function searchMyInfo(q){
   clearTimeout(mcSearchTimer);
+  // ถ้าเลือกรายการไปแล้ว และยังไม่ได้ลบข้อความออก ให้คงข้อมูลเอาไว้ก่อน
+  if(mcSelectedId&&q.trim().length>=2){return;}
   if(mcSelectedId){mcSelectedId=null;document.getElementById('mc-detail').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>';}
   const resultsEl=document.getElementById('mc-results');
   if(!q||q.trim().length<2){resultsEl.innerHTML='';return;}
@@ -1036,12 +1051,17 @@ function searchMyInfo(q){
     try{
       const rows=await api('/api/members?q='+encodeURIComponent(q.trim()));
       if(!rows.length){resultsEl.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 2px">ไม่พบชื่อนี้ในระบบ ลองตรวจสอบการสะกดอีกครั้ง</div>';return;}
-      resultsEl.innerHTML=rows.map(m=>`<div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
+      resultsEl.innerHTML=rows.map(m=>`<div class="session-row" style="cursor:pointer" onmousedown="event.preventDefault()" onclick="selectMember(${m.id})">
           <div class="av-row" style="flex:1"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone||''}</div></div></div>
           <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
         </div>`).join('');
     }catch(e){toast(e.message,true);}
   },300);
+}
+
+function selectMember(id){
+  document.getElementById('mc-results').innerHTML='';
+  loadMyInfo(id);
 }
 
 async function loadMyInfo(id){
