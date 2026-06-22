@@ -498,7 +498,7 @@ async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Conte
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน'],mycheck:['เช็คข้อมูลสมาชิก','ค้นหาและดูข้อมูลส่วนตัวของสมาชิก']};
 
-const PIN_EXEMPT_PAGES=['booking','mycheck']; // หน้าที่ไม่ต้องใส่รหัส: ตารางนัด และ เช็คข้อมูลสมาชิก
+const PIN_EXEMPT_PAGES=['booking','mycheck','packages']; // หน้าที่ไม่ต้องใส่รหัส: ตารางนัด, เช็คข้อมูลสมาชิก, แพ็กเกจ
 
 function nav(id,btn){
   if(!PIN_EXEMPT_PAGES.includes(id)&&!pagesUnlocked){
