@@ -396,9 +396,9 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 </div>
 <div class="modal-backdrop" id="modal-pin">
   <div class="modal" style="max-width:340px">
-    <div class="modal-head"><div class="modal-title"><i class="ti ti-lock"></i> ใส่รหัสเข้าใช้งาน</div><button class="close-btn" onclick="closeModal('modal-pin')"><i class="ti ti-x"></i></button></div>
-    <div class="fgroup"><label class="flabel">รหัสผ่าน</label><input type="password" class="finput" id="pin-input" placeholder="••••" inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPagePin()"></div>
-    <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-pin')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="verifyPagePin()"><i class="ti ti-lock-open"></i>ปลดล็อก</button></div>
+    <div class="modal-head"><div class="modal-title"><i class="ti ti-lock"></i> ใส่รหัสเข้าดูรายรับ</div><button class="close-btn" onclick="closeModal('modal-pin')"><i class="ti ti-x"></i></button></div>
+    <div class="fgroup"><label class="flabel">รหัสผ่าน</label><input type="password" class="finput" id="pin-input" placeholder="••••" inputmode="numeric" autocomplete="off" onkeydown="if(event.key==='Enter')verifyPaymentsPin()"></div>
+    <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-pin')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="verifyPaymentsPin()"><i class="ti ti-lock-open"></i>ปลดล็อก</button></div>
   </div>
 </div>
 <div class="modal-backdrop" id="modal-confirm-delete">
@@ -498,10 +498,8 @@ async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Conte
 function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน'],mycheck:['เช็คข้อมูลสมาชิก','ค้นหาและดูข้อมูลส่วนตัวของสมาชิก']};
 
-const PIN_EXEMPT_PAGES=['booking','mycheck']; // หน้าที่ไม่ต้องใส่รหัส: ตารางนัด และ เช็คข้อมูลสมาชิก
-
 function nav(id,btn){
-  if(!PIN_EXEMPT_PAGES.includes(id)&&!pagesUnlocked){
+  if(id==='payments'&&!paymentsUnlocked){
     pendingNav={id,btn};
     const pinInput=document.getElementById('pin-input');
     if(pinInput)pinInput.value='';
@@ -520,16 +518,16 @@ function nav(id,btn){
   closeSidebar();loadPage(id);
 }
 
-const APP_PIN='20102535'; // เปลี่ยนรหัสเข้าใช้งานหน้าที่ล็อกไว้ได้ที่นี่
-let pagesUnlocked=false;
+const PAYMENTS_PIN='20102535'; // เปลี่ยนรหัสเข้าดูรายรับได้ที่นี่
+let paymentsUnlocked=false;
 let pendingNav=null;
 
-function verifyPagePin(){
+function verifyPaymentsPin(){
   const input=document.getElementById('pin-input');
   const val=input.value.trim();
   if(!val){toast('กรุณากรอกรหัส',true);return;}
-  if(val===APP_PIN){
-    pagesUnlocked=true;
+  if(val===PAYMENTS_PIN){
+    paymentsUnlocked=true;
     closeModal('modal-pin');
     if(pendingNav){nav(pendingNav.id,pendingNav.btn);pendingNav=null;}
   }else{
@@ -1072,17 +1070,7 @@ const todayStr=getLocalDate();
 updateCalLabel();
 document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 checkHealth();
-populateSelects().then(()=>{
-  if(PIN_EXEMPT_PAGES.includes('dashboard')||pagesUnlocked){
-    loadDashboard();
-  }else{
-    const dashBtn=document.querySelector(".nav-btn[onclick^=\"nav('dashboard'\"]");
-    pendingNav={id:'dashboard',btn:dashBtn};
-    const pinInput=document.getElementById('pin-input');
-    if(pinInput)pinInput.value='';
-    openModal('modal-pin');
-  }
-});
+populateSelects().then(()=>loadDashboard());
 }
 </script>
 </body>
