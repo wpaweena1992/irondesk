@@ -285,7 +285,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       </div>
     </div>
     <div id="page-mycheck" class="page">
-      <div class="card mb">
+      <div class="card mb" id="mc-search-card">
         <div class="card-hd"><div class="card-title"><i class="ti ti-search"></i>ค้นหาด้วยชื่อสมาชิก</div></div>
         <input type="text" class="finput" id="mc-search" placeholder="พิมพ์ชื่อหรือนามสกุลสมาชิก…" oninput="searchMyInfo(this.value)">
         <div id="mc-results" style="margin-top:8px"></div>
@@ -556,7 +556,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 function switchTab(btn,id){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['tab-today','tab-history'].forEach(t=>document.getElementById(t).style.display='none');document.getElementById(id).style.display='block';if(id==='tab-history')loadSessionHistory();}
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-function loadPage(id){if(id==='dashboard')loadDashboard();if(id==='members')loadMembers();if(id==='packages')loadPackages();if(id==='sessions')loadSessions();if(id==='booking')loadBookings();if(id==='payments')loadPayments();if(id==='mycheck')resetMyCheck();}
+function loadPage(id){if(id==='dashboard')loadDashboard();if(id==='members')loadMembers();if(id==='packages')loadPackages();if(id==='sessions')loadSessions();if(id==='booking')loadBookings();if(id==='payments')loadPayments();if(id==='mycheck')initMyCheck();}
 const DAYS_TH=['จ','อ','พ','พฤ','ศ','ส','อา'];
 const pkgColors={PT_hours:'#e85d26',monthly:'#2563b0',class_sessions:'#2a7d4f',bundle:'#6d3fa0'};
 const pkgLabels={PT_hours:'PT ชั่วโมง',monthly:'รายเดือน',class_sessions:'คลาสกลุ่ม',bundle:'บันเดิล'};
@@ -986,6 +986,39 @@ async function checkHealth(){
 let mcSearchTimer=null;
 let mcSelectedId=null;
 
+// แมปชื่อผู้ใช้ (username) → คำค้นหาชื่อสมาชิกของตัวเองในระบบ สำหรับหน้า "เช็คข้อมูลสมาชิก"
+// พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
+// ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
+const STAFF_MEMBER_QUERY={
+  'Nan':'พี่แนน'
+};
+
+async function autoLoadMyInfo(){
+  const detailEl=document.getElementById('mc-detail');
+  detailEl.innerHTML='<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
+  const q=STAFF_MEMBER_QUERY[currentUser]||currentUser;
+  try{
+    const rows=await api('/api/members?q='+encodeURIComponent(q));
+    if(!rows.length){
+      detailEl.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">ไม่พบข้อมูลสมาชิกของคุณในระบบ<br>กรุณาติดต่อแอดมิน</div>';
+      return;
+    }
+    if(rows.length===1){
+      loadMyInfo(rows[0].id);
+      return;
+    }
+    detailEl.innerHTML='<div style="color:var(--muted);font-size:12.5px;margin-bottom:8px">พบชื่อที่ตรงกันหลายรายการ กรุณาเลือกรายการของคุณ</div>'+rows.map(m=>`<div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
+        <div class="av-row" style="flex:1"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone||''}</div></div></div>
+        <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
+      </div>`).join('');
+  }catch(e){toast(e.message,true);detailEl.innerHTML='';}
+}
+
+function initMyCheck(){
+  if(isStaffRestricted)autoLoadMyInfo();
+  else resetMyCheck();
+}
+
 function resetMyCheck(){
   const search=document.getElementById('mc-search');
   if(search)search.value='';
@@ -1039,7 +1072,7 @@ async function loadMyInfo(id){
       <div class="card mb">
         <div class="card-hd">
           <div class="card-title"><i class="ti ti-id-badge-2"></i>${m.fname} ${m.lname}</div>
-          <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status||'active')}</span><button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button></div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status||'active')}</span>${isStaffRestricted?'':'<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
         </div>
         <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:0">
           <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">แพ็กเกจปัจจุบัน</div><div class="kpi-val" style="font-size:17px">${m.pkg_name||'— ไม่มีแพ็กเกจ —'}</div></div>
@@ -1062,6 +1095,9 @@ function applyPermissions(){
     const el=document.getElementById(id);
     if(el)el.style.display=isStaffRestricted?'none':'';
   });
+  // หน้า "เช็คข้อมูลสมาชิก": พนักงานทั่วไปเห็นข้อมูลของตัวเองอัตโนมัติ ไม่มีช่องค้นหา/ฟิลเตอร์ มีแต่แอดมินที่ค้นหาคนอื่นได้
+  const mcCard=document.getElementById('mc-search-card');
+  if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
 }
 
 function initApp(){
