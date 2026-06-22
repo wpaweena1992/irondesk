@@ -419,22 +419,22 @@ let amountsHidden=false;
 // แต่ละ username เก็บเป็น "รายการรหัสผ่าน" (array) เพื่อรองรับกรณีชื่อซ้ำ (เช่น Kae มี 2 รหัส) โดยไม่ทับกันแบบเดิม
 const APP_USERS={
   'admin'  :['issara2026'],
-  'staff'  :['studio123'],
+  'staff'  :['studio123','issara15'],
   'Nan'    :['issara00'],
   'Chef'   :['issara01'],
+  'Chorf'  :['issara02'],
   'Pan'    :['issara03'],
   'New'    :['issara04'],
+  'Bam'    :['issara04'],
+  'Joe'    :['issara05'],
   'Ireane' :['issara06'],
   'Mac'    :['issara07'],
-  'Kae'    :['issara08'],
+  'Kae'    :['issara08','issara12'],
   'Tuk'    :['issara09'],
-  'Bom&Kram'    :['issara10'],
-  'O&Kae'  :['issara11'],
+  'Bom'    :['issara10'],
+  'O'      :['issara11'],
   'Nong'   :['issara13'],
-  'PaPing' :['issara14'],
-  'Ja'     :['issara15'],
-    'Ariel&Jinglebell'  :['issara16']
-
+  'PaPing' :['issara14']
 }; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: [รหัสผ่าน, ...])
 
 // username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
@@ -990,21 +990,7 @@ let mcSelectedId=null;
 // พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
 // ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
 const STAFF_MEMBER_QUERY={
-'Nan' : 'พี่แนน',
-'Ja' : 'พี่จา',
-'Chef' : 'น้องเซฟ',
-'Pan' : 'พี่ป่าน',
-'New' : 'พี่นิว',
-'Ireane' : 'Ireane',
-'Mac' : 'พี่แม็ก',
-'Kae' : 'พี่เก๋',
-'Tuk' : 'พี่ตุ๊ก',
-'Bom&Kram' : 'พี่บ๋อม&พี่คราม',
-'O&Kae' : 'พี่โอ๋&พี่เก๋',
-'Nong' : 'พี่น้อง',
-'PaPing' : 'ปาปิ้ง&คุณแม่',
-'Ariel&Jinglebell' : 'แอเรียว&จิงเกอเบล'
-
+  'Nan':'พี่แนน'
 };
 
 async function autoLoadMyInfo(){
@@ -1078,8 +1064,10 @@ async function loadMyInfo(id){
     const pct=m.hours_total?Math.round((hu/m.hours_total)*100):null;
     const sb=s=>s==='active'?'badge-green">แอคทีฟ':s==='expiring'?'badge-amber">ใกล้หมด':s==='expired'?'badge-red">หมดอายุ':'badge-gray">ไม่ระบุ';
 
+    const ssb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
+
     const mySessions=sessions
-      .filter(s=>(s.member_id!=null?s.member_id===id:(s.fname===m.fname&&s.lname===m.lname))&&s.status==='done')
+      .filter(s=>(s.member_id!=null?s.member_id===id:(s.fname===m.fname&&s.lname===m.lname)))
       .sort((a,b)=>((b.session_date||'')+String(b.session_time||'')).localeCompare((a.session_date||'')+String(a.session_time||'')));
 
     detailEl.innerHTML=`
@@ -1096,9 +1084,9 @@ async function loadMyInfo(id){
         </div>
       </div>
       <div class="card">
-        <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นที่เทรนเสร็จแล้ว</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
+        <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นทั้งหมด</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
         <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th><th>สถานะ</th></tr></thead>
-        <tbody>${mySessions.length?mySessions.map(s=>`<tr><td>${(s.session_date||'').toString().slice(0,10)}</td><td>${String(s.session_time||'').slice(0,5)||'—'}</td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic||'—'}</td><td>${s.status || '-'}</td> </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่นที่เสร็จแล้ว</td></tr>'}</tbody></table>
+        <tbody>${mySessions.length?mySessions.map(s=>`<tr><td>${(s.session_date||'').toString().slice(0,10)}</td><td>${String(s.session_time||'').slice(0,5)||'—'}</td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic||'—'}</td><td><span class="badge ${ssb(s.status)}</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่น</td></tr>'}</tbody></table>
       </div>`;
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
 }
