@@ -1124,12 +1124,27 @@ function applyPermissions(){
 function initApp(){
   document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   applyPermissions();
-const todayStr=getLocalDate();
-['s-date','b-date','p-date','m-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr;});
-updateCalLabel();
-document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-checkHealth();
-populateSelects().then(()=>loadBookings());
+  const todayStr=getLocalDate();
+  ['s-date','b-date','p-date','m-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr;});
+  updateCalLabel();
+  document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  checkHealth();
+
+  if(isStaffRestricted){
+    // non-admin → เปิดหน้า "เช็คข้อมูลสมาชิก" เป็นหน้าแรก
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-mycheck').classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b=>{
+      b.classList.remove('active');
+      if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'mycheck'"))b.classList.add('active');
+    });
+    document.getElementById('page-title').textContent='เช็คข้อมูลสมาชิก';
+    document.getElementById('page-sub').textContent='ค้นหาและดูข้อมูลส่วนตัวของสมาชิก';
+    populateSelects().then(()=>initMyCheck());
+  } else {
+    // admin → เปิดหน้า "ตารางนัด" เหมือนเดิม
+    populateSelects().then(()=>loadBookings());
+  }
 }
 </script>
 </body>
