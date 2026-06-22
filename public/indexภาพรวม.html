@@ -187,13 +187,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <img src="/logo.png" alt="Issara Studio" style="height:48px;width:auto">
 </div>
   <div class="nav-section">หลัก</div>
-  <button class="nav-btn" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>ภาพรวม</button>
+  <button class="nav-btn active" onclick="nav('dashboard',this)"><i class="ti ti-layout-dashboard"></i>ภาพรวม</button>
   <button class="nav-btn" onclick="nav('members',this)"><i class="ti ti-users"></i>สมาชิก</button>
    <button class="nav-btn" onclick="nav('mycheck',this)"><i class="ti ti-id-badge-2"></i>เช็คข้อมูลสมาชิก</button>
   <button class="nav-btn" onclick="nav('packages',this)"><i class="ti ti-package"></i>แพ็กเกจ</button>
   <div class="nav-section">การนัด</div>
   <button class="nav-btn" onclick="nav('sessions',this)"><i class="ti ti-clock-play"></i>เซสชั่นวันนี้</button>
-  <button class="nav-btn active" onclick="nav('booking',this)"><i class="ti ti-calendar"></i>ตารางนัด</button>
+  <button class="nav-btn" onclick="nav('booking',this)"><i class="ti ti-calendar"></i>ตารางนัด</button>
   <div class="nav-section">การเงิน</div>
   <button class="nav-btn" onclick="nav('payments',this)"><i class="ti ti-credit-card"></i>รายรับ</button>
   
@@ -209,7 +209,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 <div class="main">
   <header class="topbar">
     <div>
-      <div class="topbar-title" id="page-title">ตารางนัด</div>
+      <div class="topbar-title" id="page-title">ภาพรวม</div>
       <div class="topbar-sub" id="page-sub">กำลังโหลด...</div>
     </div>
     <div class="topbar-right">
@@ -221,7 +221,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     </div>
   </header>
   <div class="content">
-    <div id="page-dashboard" class="page">
+    <div id="page-dashboard" class="page active">
       <div class="kpi-grid" id="dash-kpis"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
       <div class="g3 mb">
         <div class="card" style="display:none"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>รายรับ 7 วัน</div></div><div style="position:relative;height:210px"><canvas id="revenueChart"></canvas></div></div>
@@ -261,7 +261,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
       </div>
     </div>
-    <div id="page-booking" class="page active">
+    <div id="page-booking" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600" id="cal-month-label"></div>
         <div style="display:flex;gap:8px">
@@ -1072,7 +1072,17 @@ const todayStr=getLocalDate();
 updateCalLabel();
 document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 checkHealth();
-populateSelects().then(()=>loadBookings());
+populateSelects().then(()=>{
+  if(PIN_EXEMPT_PAGES.includes('dashboard')||pagesUnlocked){
+    loadDashboard();
+  }else{
+    const dashBtn=document.querySelector(".nav-btn[onclick^=\"nav('dashboard'\"]");
+    pendingNav={id:'dashboard',btn:dashBtn};
+    const pinInput=document.getElementById('pin-input');
+    if(pinInput)pinInput.value='';
+    openModal('modal-pin');
+  }
+});
 }
 </script>
 </body>
