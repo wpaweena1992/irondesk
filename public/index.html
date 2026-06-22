@@ -417,22 +417,20 @@ let amountsHidden=false;
 /* ===== LOGIN ===== */
 // แต่ละ username เก็บเป็น "รายการรหัสผ่าน" (array) เพื่อรองรับกรณีชื่อซ้ำ (เช่น Kae มี 2 รหัส) โดยไม่ทับกันแบบเดิม
 const APP_USERS={
-  'admin'   :['issara2010'],
-  'staff'   :['studio123'],
-  'Nan'     :['issara00'],
-  'Nong'    :['issara01'],
-  'Chef'    :['issara02'],
-  'Pan'     :['issara03'],
-  'New'     :['issara04'],
-  'Ireane'  :['issara05'],
-  'Mac'     :['issara06'],
-  'Kae'     :['issara07'],
-  'Tuk'     :['issara08'],
-  'Bom&Kram'  :['issara09'],
-  'O&Kae'   : ['issara10'],
-  'Ja'      : ['issara11'],
-  'PaPing' :['issara12'],
-  'Ariel&Jinglebell': ['issara13']
+  'admin'       :['issara2010'],
+  'staff'       :['studio123'],
+  'Sirinthip'   :['issara00'],
+  'Patcharee'   :['issara01'],
+  'Praewphan'   :['issara02'],
+  'Nattasumon'  :['issara03'],
+  'Sukanya'     :['issara04'],
+  'Unakorn'     :['issara05'],
+  'Kesinee'     :['issara06'],
+  'Kunanon'     :['issara07'],
+  'Hathaiporn'  :['issara08'],
+  'Rujira'      :['issara09'],
+  'Phattharaseth' : ['issara10'],
+  'Irene'       : ['issara11']
 
 }; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: [รหัสผ่าน, ...])
 
@@ -1006,20 +1004,20 @@ let mcSelectedId=null;
 // พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
 // ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
     const STAFF_MEMBER_QUERY = {
-        'Nan': 'พี่แนน',
+        'Sirinthip': 'ศิรินทิพย์(พี่แนน)',
         'Chef': 'น้องเซฟ',
-        'Pan': 'พี่ป่าน',
-        'New': 'พี่นิว',
-        'Ireane': 'Ireane',
-        'Mac': 'พี่แม็ก',
-        'Kae': 'พี่เก๋(เกศสินี)',
-        'Tuk': 'พี่ตุ๊ก',
-        'Bom&Kram': 'พี่บ๋อม&พี่คราม',
-        'O&Kae': 'พี่โอ๋&พี่เก๋',
-        'Nong': 'พี่น้อง',
-        'PaPing': 'ปาปิ้ง&คุณแม่',
+        'Rujira': 'รุจิรา(พี่ป่าน)',
+        'Hathaiporn': 'หทัยพร(พี่นิว)',
+        'Irene': 'Ireane',
+        'Kunanon': 'คุณานนท์(พี่แม็ก)',
+        'Kesinee': 'พี่เก๋(เกศสินี)','น้องเซฟ',
+        'Unakorn': 'อุณากร์(พี่ตุ๊ก)',
+        'Phattharaseth': 'ภัทรเศรษฐ์(พี่บ๋อม) (พี่คราม)',
+        'Sukanya': 'สุกัญญา(พี่โอ๋&พี่เก๋)',
+        'Patcharee': 'พัชรี(พี่น้อง)',
+        'Praewphan': 'แพรวพรรณ(ปาปิ้ง&คุณแม่)',
         'Ariel&Jinglebell': 'แอเรียว&จิงเกอเบล',
-        'Ja': 'พี่จา'
+        'Nattasumon': 'ณัฏฐ์สุมน(พี่จา)'
     };
 
 async function autoLoadMyInfo(){
