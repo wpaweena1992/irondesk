@@ -141,23 +141,8 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .db-checking{background:var(--surface2);color:var(--muted)}
 .blurred{filter:blur(6px);transition:filter .25s;user-select:none;pointer-events:none}
 .blurred-chart{filter:blur(8px);transition:filter .25s}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
-@media(max-width:960px){
-  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}
-  .g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}
-  .tb-btn-label{display:none}.tb-btn{padding:7px 10px}
-  .topbar{padding:.75rem 1rem;flex-wrap:nowrap}.topbar-right{gap:5px}
-  #pay-kpis{grid-template-columns:1fr 1fr!important}
-}
-@media(max-width:600px){
-  .content{padding:.75rem}.topbar{padding:.6rem .75rem}
-  .kpi-grid{grid-template-columns:1fr 1fr}.frow{grid-template-columns:1fr}
-  .kpi-val{font-size:20px}
-  .cal-cell{min-height:48px}.cal-dot{font-size:9px;padding:1px 3px}
-  .modal{padding:1.1rem 1rem;border-radius:var(--r-lg)}
-  #pay-kpis{grid-template-columns:1fr!important}
-  .login-card{padding:1.75rem 1.25rem}
-}
+@media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
 /* LOGIN PAGE */
 #login-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
@@ -227,11 +212,11 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       <div class="topbar-sub" id="page-sub">กำลังโหลด...</div>
     </div>
     <div class="topbar-right">
-      <div class="db-status db-checking" id="db-status"><i class="ti ti-database"></i><span class="tb-btn-label">กำลังเชื่อมต่อ...</span></div>
+      <div class="db-status db-checking" id="db-status"><i class="ti ti-database"></i><span>กำลังเชื่อมต่อ...</span></div>
       <button class="tb-btn hamburger-btn" onclick="openSidebar()"><i class="ti ti-menu-2"></i></button>
       <button class="tb-btn" id="btn-toggle-pay" style="display:none" onclick="toggleAmounts()"><i class="ti ti-eye-off"></i><span id="btn-toggle-pay-label">ซ่อนยอด</span></button>
-      <button class="tb-btn" id="btn-add-session" onclick="openModal('modal-session')"><i class="ti ti-plus"></i><span class="tb-btn-label">เพิ่มเซสชั่น</span</button>
-      <button class="tb-btn primary" id="btn-add-member" onclick="openModal('modal-member')"><i class="ti ti-user-plus"></i><span class="tb-btn-label">เพิ่มสมาชิก</span</button>
+      <button class="tb-btn" id="btn-add-session" onclick="openModal('modal-session')"><i class="ti ti-plus"></i>เพิ่มเซสชั่น</button>
+      <button class="tb-btn primary" id="btn-add-member" onclick="openModal('modal-member')"><i class="ti ti-user-plus"></i>เพิ่มสมาชิก</button>
     </div>
   </header>
   <div class="content">
@@ -254,7 +239,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
           <option value="">สถานะทั้งหมด</option><option value="active">แอคทีฟ</option><option value="expiring">ใกล้หมด</option><option value="expired">หมดอายุ</option>
         </select>
       </div>
-      <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>สมาชิก</th><th>เบอร์โทร</th><th>แพ็กเกจ</th><th>ชั่วโมงคงเหลือ</th><th>หมดอายุ</th><th>สถานะ</th><th></th></tr></thead><tbody id="members-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody></table></div>
+      <div class="card"><table class="tbl"><thead><tr><th>สมาชิก</th><th>เบอร์โทร</th><th>แพ็กเกจ</th><th>ชั่วโมงคงเหลือ</th><th>หมดอายุ</th><th>สถานะ</th><th></th></tr></thead><tbody id="members-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody></table></div>
     </div>
     <div id="page-packages" class="page">
       <div class="g32 mb" id="pkg-grid"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
@@ -264,7 +249,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <button class="tab-btn active" onclick="switchTab(this,'tab-today')">วันนี้</button>
         <button class="tab-btn" onclick="switchTab(this,'tab-history')">ประวัติ</button>
       </div>
-      <div id="tab-today"><div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div 	class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
+      <div id="tab-today"><div class="card"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div 	class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
       	<div id="tab-history" style="display:none">
         	<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
           	<input type="text" class="finput" id="hist-search-name" style="max-width:220px" placeholder="ค้นหาชื่อสมาชิก…" oninput="filterHistory()">
@@ -272,7 +257,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
           	<button class="btn btn-ghost btn-sm" onclick="document.getElementById('hist-search-name').value='';document.getElementById('hist-search-date').value='';filterHistory()"><i class="ti ti-x"></i>ล้างค้นหา</button>
           	<span id="hist-count" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
         	</div>
-        <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+        <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
       </div>
     </div>
     <div id="page-booking" class="page active">
@@ -1006,8 +991,8 @@ async function populateSelects(){
 
 async function checkHealth(){
   const el=document.getElementById('db-status');
-  try{await api('/api/health');el.className='db-status db-ok';el.innerHTML='<i class="ti ti-database"></i><span class="tb-btn-label">Database เชื่อมต่อแล้ว</span>';}
-  catch(e){el.className='db-status db-err';el.innerHTML='<i class="ti ti-database-off"></i><span class="tb-btn-label">Database ออฟไลน์</span>';}
+  try{await api('/api/health');el.className='db-status db-ok';el.innerHTML='<i class="ti ti-database"></i><span>Database เชื่อมต่อแล้ว</span>';}
+  catch(e){el.className='db-status db-err';el.innerHTML='<i class="ti ti-database-off"></i><span>Database ออฟไลน์</span>';}
 }
 
 let mcSearchTimer=null;
@@ -1132,7 +1117,7 @@ async function loadMyInfo(id){
       </div>
       <div class="card">
         <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นทั้งหมด</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th><th>สถานะ</th></tr></thead>
+        <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th><th>สถานะ</th></tr></thead>
         <tbody>${mySessions.length?mySessions.map(s=>`<tr><td>${(s.session_date||'').toString().slice(0,10)}</td><td>${String(s.session_time||'').slice(0,5)||'—'}</td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic||'—'}</td><td><span class="badge ${ssb(s.status)}</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่น</td></tr>'}</tbody></table>
       </div>`;
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
