@@ -142,7 +142,31 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .blurred{filter:blur(6px);transition:filter .25s;user-select:none;pointer-events:none}
 .blurred-chart{filter:blur(8px);transition:filter .25s}
 @media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.content{padding:1rem}.topbar{padding:.75rem 1rem}.kpi-grid{grid-template-columns:repeat(2,1fr)}.frow{grid-template-columns:1fr}}
+    /* ใช้ container จัดกึ่งกลางและคุมความกว้าง */
+    #page-mycheck {
+        width: 100%;
+        max-width: 1200px; /* ขยายความกว้างสูงสุดให้มากขึ้นตามต้องการ */
+        margin: 0 auto;
+        padding: 0 20px; /* เพิ่มระยะห่างขอบซ้ายขวาเล็กน้อยไม่ให้ชิดขอบเกินไป */
+        box-sizing: border-box; /* สำคัญมาก: ช่วยให้ Padding ไม่ไปบวกเพิ่มจนหน้าจอล้น */
+    }
+
+        /* ปรับการ์ดที่อยู่ข้างใน ให้ขยายเต็มความกว้างของหน้าจอ */
+        #page-mycheck .card {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+    /* ปรับสำหรับหน้าจอมือถือ */
+    @media(max-width:600px) {
+        #page-mycheck {
+            padding: 0 10px;
+        }
+
+            #page-mycheck .card {
+                padding: 10px; /* ลด padding การ์ดในมือถือเพื่อให้มีพื้นที่เนื้อหามากขึ้น */
+            }
+    }
 
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:99px}
 /* LOGIN PAGE */
@@ -1124,32 +1148,14 @@ async function loadMyInfo(id){
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
 }
 function applyPermissions(){
-  // พนักงานทั่วไป (ไม่ใช่ ADMIN_USERS) ทำรายการ (เพิ่ม/แก้ไข/ลบ) ได้แค่หน้า "ตารางนัด" เท่านั้น
-  // หน้าอื่นๆ ทุกปุ่มที่ใช้เพิ่ม/แก้ไข/ลบข้อมูลจะถูกซ่อนไว้ ดูข้อมูลได้ตามปกติ
   ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.display=isStaffRestricted?'none':'';
   });
-  // หน้า "เช็คข้อมูลสมาชิก": พนักงานทั่วไปเห็นข้อมูลของตัวเองอัตโนมัติ ไม่มีช่องค้นหา/ฟิลเตอร์ มีแต่แอดมินที่ค้นหาคนอื่นได้
   const mcCard=document.getElementById('mc-search-card');
   if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
 }
-/* ปรับสำหรับทุกหน้าจอให้เนื้อหาในหน้า mycheck ไม่ล้นและมีความกว้างเหมาะสม */
-#page - mycheck {
-    width: 100 %;
-    max - width: 800px; /* จำกัดความกว้างสูงสุดไม่ให้ยืดจนเกินไปในจอคอมพิวเตอร์ */
-    margin: 0 auto;   /* จัดให้อยู่กึ่งกลางหน้าจอ */
-}
 
-/* ปรับสำหรับหน้าจอมือถือ */
-@media(max - width: 600px) {
-    #page - mycheck {
-        padding: 0 10px; /* เพิ่มระยะห่างจากขอบจอเล็กน้อย */
-    }
-    #page - mycheck.card {
-        padding: 15px; /* ลด Padding ในมือถือเพื่อให้การ์ดไม่กว้างเกินไป */
-    }
-}
 function initApp(){
   document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   applyPermissions();
