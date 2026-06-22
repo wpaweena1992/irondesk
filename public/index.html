@@ -169,16 +169,25 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       <div class="login-logo-name">Issara<span>Studio</span></div>
       <div class="login-sub">เข้าสู่ระบบ IssaraStudio</div>
     </div>
-    <div class="login-error" id="login-error"><i class="ti ti-alert-circle"></i><span id="login-error-msg">ผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</span></div>
-    <div class="fgroup">
-      <label class="flabel">ชื่อผู้ใช้</label>
-      <input type="text" class="finput" id="login-user" placeholder="username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+<div id="login-screen" style="position:fixed;inset:0;background:#f5f4f0;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#fff;border-radius:20px;padding:2rem 2.25rem;width:100%;max-width:360px;box-shadow:0 4px 24px rgba(0,0,0,.1);text-align:center">
+    <div style="width:56px;height:56px;background:#e85d26;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;color:#fff"><i class="ti ti-barbell"></i></div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">IssaraStudio</div>
+    <p style="font-size:12.5px;color:#7a7a72;margin-bottom:1.5rem">กรอกชื่อผู้ใช้และรหัสผ่านเพื่อเข้าใช้งาน</p>
+    <div style="text-align:left;margin-bottom:12px">
+      <label style="display:block;font-size:11px;font-weight:600;color:#7a7a72;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">ชื่อผู้ใช้</label>
+      <input type="text" id="login-user" placeholder="username" style="width:100%;border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:9px 12px;font-size:13.5px;font-family:'IBM Plex Sans Thai',sans-serif;outline:none" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
     </div>
-    <div class="fgroup">
-      <label class="flabel">รหัสผ่าน</label>
-      <input type="password" class="finput" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="text-align:left;margin-bottom:16px">
+      <label style="display:block;font-size:11px;font-weight:600;color:#7a7a72;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">รหัสผ่าน</label>
+      <input type="password" id="login-pass" placeholder="••••••" style="width:100%;border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:9px 12px;font-size:13.5px;font-family:'IBM Plex Sans Thai',sans-serif;outline:none" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="btn btn-orange btn-full" style="margin-top:6px" onclick="doLogin()"><i class="ti ti-login-2"></i>เข้าสู่ระบบ</button>
+    <div id="login-error" style="background:#fdecea;color:#c0392b;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;display:none">
+      <span id="login-error-msg"></span>
+    </div>
+    <button onclick="doLogin()" style="width:100%;background:#e85d26;color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif"><i class="ti ti-login"></i> เข้าสู่ระบบ</button>
+  </div>
+</div>
   </div>
 </div>
 <div id="app-root" class="app-hidden">
@@ -415,23 +424,22 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
 let amountsHidden=false;
 /* ===== LOGIN ===== */
-// แต่ละ username เก็บเป็น "รายการรหัสผ่าน" (array) เพื่อรองรับกรณีชื่อซ้ำ (เช่น Kae มี 2 รหัส) โดยไม่ทับกันแบบเดิม
 const APP_USERS={
-        'admin': 'issara2010',
-        'staff': 'studio123',
-        'Sirinthip': 'issara00',
-        'Patcharee': 'issara01',
-        'Praewphan': 'issara02',
-        'Nattasumon': 'issara03',
-        'Sukanya': 'issara04',
-        'Unakorn': 'issara05',
-        'Kesinee': 'issara06',
-        'Kunanon': 'issara07',
-        'Hathaiporn': 'issara08',
-        'Rujira': 'issara09',
-        'Phattharaseth': 'issara10',
-        'Irene': 'issara11'
-}; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: [รหัสผ่าน, ...])
+    'admin': 'issara2010',
+    'staff': 'studio123',
+    'Sirinthip': 'issara00',
+    'Patcharee': 'issara01',
+    'Praewphan': 'issara02',
+    'Nattasumon': 'issara03',
+    'Sukanya': 'issara04',
+    'Unakorn': 'issara05',
+    'Kesinee': 'issara06',
+    'Kunanon': 'issara07',
+    'Hathaiporn': 'issara08',
+    'Rujira': 'issara09',
+    'Phattharaseth': 'issara10',
+    'Irene': 'issara11'
+}; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: password)
 
 // username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
 // username อื่นๆ ทั้งหมด = พนักงานทั่วไป → ทำรายการ (เพิ่ม/แก้ไข/ลบ) ได้เฉพาะหน้า "ตารางนัด" เท่านั้น หน้าอื่นดูได้อย่างเดียว
@@ -464,7 +472,7 @@ function doLogin(){
     errEl.classList.add('show');
     return;
   }
-  if(APP_USERS[u]&&APP_USERS[u].includes(p)){
+  if(APP_USERS[u]&&APP_USERS[u]===p){
     errEl.classList.remove('show');
     try{sessionStorage.setItem('issara_auth_user',u);}catch(e){}
     setSessionRole(u);
@@ -1009,7 +1017,7 @@ let mcSelectedId=null;
         'Hathaiporn': 'หทัยพร(พี่นิว)',
         'Irene': 'Ireane',
         'Kunanon': 'คุณานนท์(พี่แม็ก)',
-        'Kesinee': 'พี่เก๋(เกศสินี)','น้องเซฟ',
+        'Kesinee': 'พี่เก๋(เกศสินี)',
         'Unakorn': 'อุณากร์(พี่ตุ๊ก)',
         'Phattharaseth': 'ภัทรเศรษฐ์(พี่บ๋อม) (พี่คราม)',
         'Sukanya': 'สุกัญญา(พี่โอ๋&พี่เก๋)',
