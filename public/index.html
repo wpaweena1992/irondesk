@@ -1354,9 +1354,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นทั้งหมด</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
         <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th><th>สถานะ</th></tr></thead>
         <tbody>${mySessions.length ? mySessions.map(s => `<tr><td>${(s.session_date || '').toString().slice(0, 10)}</td><td>${String(s.session_time || '').slice(0, 5) || '—'}</td><td>${s.type}</td><td>${s.trainer_name || '—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic || '—'}</td><td><span class="badge ${ssb(s.status)}</span></td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่น</td></tr>'}</tbody></table></div>
-      </div>`;
-        } catch (e) { toast(e.message, true); detailEl.innerHTML = ''; }
-    }
+        <div style="margin-top:12px;display:flex;justify-content:center">
+                <button class="btn btn-ghost" onclick="window.scrollTo({top:0,behavior:'smooth'});resetMyCheck ? resetMyCheck() : location.reload()">
+                  <i class="ti ti-arrow-left"></i>กลับไปค้นหา
+                </button>
+              </div>
+              </div>`;
+                } catch (e) { toast(e.message, true); detailEl.innerHTML = ''; }
+            }
     //function applyPermissions(){
     //  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
     //    const el=document.getElementById(id);
