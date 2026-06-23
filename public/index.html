@@ -251,7 +251,40 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     #pay-kpis {
         grid-template-columns: repeat(auto-fit,minmax(150px,1fr)) !important
     }
-
+@media(max-width:600px){
+  .cal-cell{min-height:36px;padding:3px}
+  .cal-dot{display:none}
+  .cal-dot-mobile{width:7px;height:7px;border-radius:50%;display:inline-block;margin:1px}
+  .cal-day-num{font-size:10px}
+  #cal-detail{display:block}
+}
+@media(min-width:601px){
+  .cal-dot-mobile{display:none}
+  #cal-detail{display:none}
+}
+function showCalDetail(iso, evts) {
+  const detail = document.getElementById('cal-detail-inner');
+  if (!detail) return;
+  const dc = ['#e85d26','#2563b0','#2a7d4f','#b86e00','#6d3fa0'];
+  const [y,m,d] = iso.split('-');
+  const dateLabel = `${parseInt(d)} ${['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][parseInt(m)]} ${parseInt(y)+543}`;
+  if (!evts.length) {
+    detail.innerHTML = `<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)">${dateLabel}</div><div style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">ไม่มีนัด</div>`;
+    return;
+  }
+  const rows = evts.map((e,j) => {
+    const cancelled = e.status === 'cancelled';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);${cancelled?'opacity:.5':''}">
+      <span style="font-size:12px;color:var(--muted);width:38px;flex-shrink:0">${String(e.booking_time||'').slice(0,5)}</span>
+      <span style="width:9px;height:9px;border-radius:50%;background:${dc[j%dc.length]};flex-shrink:0"></span>
+      <span style="font-size:13px;flex:1;${cancelled?'text-decoration:line-through':''}">${e.fname}</span>
+      <span style="font-size:11px;color:var(--muted)">${e.type||''}</span>
+      ${!cancelled && !isStaffRestricted ? `<button onclick="editBooking(${e.id})" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 4px"><i class="ti ti-edit"></i></button>
+      <button onclick="cancelBooking(${e.id})" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 4px"><i class="ti ti-x"></i></button>` : ''}
+    </div>`;
+  }).join('');
+  detail.innerHTML = `<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)">${dateLabel} · ${evts.length} นัด</div>${rows}`;
+}
 </style>
 </head>
 <body>
@@ -316,61 +349,69 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     </div>
   </header>
   <div class="content">
-    <div id="page-dashboard" class="page">
-      <div class="kpi-grid" id="dash-kpis"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
-      <div class="g3 mb">
-        <div class="card" style="display:none"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>รายรับ 7 วัน</div></div><div style="position:relative;height:210px"><canvas id="revenueChart"></canvas></div></div>
-        
+      <div id="page-dashboard" class="page">
+          <div class="kpi-grid" id="dash-kpis"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
+          <div class="g3 mb">
+              <div class="card" style="display:none"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-bar"></i>รายรับ 7 วัน</div></div><div style="position:relative;height:210px"><canvas id="revenueChart"></canvas></div></div>
+
+          </div>
+          <div class="g2 mb">
+              <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-clock-play"></i>เซสชั่นวันนี้</div></div><div id="dash-sessions"><div class="page-spinner"><div class="spinner"></div></div></div></div>
+              <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-bell-ringing"></i>แจ้งเตือน</div></div><div id="dash-alerts"><div class="page-spinner"><div class="spinner"></div></div></div></div>
+              <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-donut"></i>สัดส่วนแพ็กเกจ</div></div><div style="position:relative;height:170px;margin-bottom:12px"><canvas id="pkgChart"></canvas></div><div id="pkg-legend"></div></div>
+          </div>
       </div>
-      <div class="g2 mb">
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-clock-play"></i>เซสชั่นวันนี้</div></div><div id="dash-sessions"><div class="page-spinner"><div class="spinner"></div></div></div></div>
-<div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-bell-ringing"></i>แจ้งเตือน</div></div><div id="dash-alerts"><div class="page-spinner"><div class="spinner"></div></div></div></div>
-        <div class="card"><div class="card-hd"><div class="card-title"><i class="ti ti-chart-donut"></i>สัดส่วนแพ็กเกจ</div></div><div style="position:relative;height:170px;margin-bottom:12px"><canvas id="pkgChart"></canvas></div><div id="pkg-legend"></div></div>
+      <div id="page-members" class="page">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+              <input type="text" class="finput" style="max-width:280px" placeholder="ค้นหาชื่อ / เบอร์โทร…" oninput="loadMembers(this.value,document.getElementById('msf').value)">
+              <select class="fselect" style="max-width:160px" id="msf" onchange="loadMembers(document.querySelector('#page-members input').value,this.value)">
+                  <option value="">สถานะทั้งหมด</option>
+                  <option value="active">แอคทีฟ</option>
+                  <option value="expiring">ใกล้หมด</option>
+                  <option value="expired">หมดอายุ</option>
+              </select>
+          </div>
+          <div class="card"><table class="tbl"><thead><tr><th>สมาชิก</th><th>เบอร์โทร</th><th>แพ็กเกจ</th><th>ชั่วโมงคงเหลือ</th><th>หมดอายุ</th><th>สถานะ</th><th></th></tr></thead><tbody id="members-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody></table></div>
       </div>
-    </div>
-    <div id="page-members" class="page">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
-        <input type="text" class="finput" style="max-width:280px" placeholder="ค้นหาชื่อ / เบอร์โทร…" oninput="loadMembers(this.value,document.getElementById('msf').value)">
-        <select class="fselect" style="max-width:160px" id="msf" onchange="loadMembers(document.querySelector('#page-members input').value,this.value)">
-          <option value="">สถานะทั้งหมด</option><option value="active">แอคทีฟ</option><option value="expiring">ใกล้หมด</option><option value="expired">หมดอายุ</option>
-        </select>
+      <div id="page-packages" class="page">
+          <div class="g32 mb" id="pkg-grid"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
       </div>
-      <div class="card"><table class="tbl"><thead><tr><th>สมาชิก</th><th>เบอร์โทร</th><th>แพ็กเกจ</th><th>ชั่วโมงคงเหลือ</th><th>หมดอายุ</th><th>สถานะ</th><th></th></tr></thead><tbody id="members-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody></table></div>
-    </div>
-    <div id="page-packages" class="page">
-      <div class="g32 mb" id="pkg-grid"><div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div></div>
-    </div>
-    <div id="page-sessions" class="page">
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab(this,'tab-today')">วันนี้</button>
-        <button class="tab-btn" onclick="switchTab(this,'tab-history')">ประวัติ</button>
+      <div id="page-sessions" class="page">
+          <div class="tabs">
+              <button class="tab-btn active" onclick="switchTab(this,'tab-today')">วันนี้</button>
+              <button class="tab-btn" onclick="switchTab(this,'tab-history')">ประวัติ</button>
+          </div>
+          <div id="tab-today"><div class="card"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
+          <div id="tab-history" style="display:none">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+                  <input type="text" class="finput" id="hist-search-name" style="max-width:220px" placeholder="ค้นหาชื่อสมาชิก…" oninput="filterHistory()">
+                  <input type="date" class="finput" id="hist-search-date" style="max-width:180px" onchange="filterHistory()">
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('hist-search-name').value='';document.getElementById('hist-search-date').value='';filterHistory()"><i class="ti ti-x"></i>ล้างค้นหา</button>
+                  <span id="hist-count" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
+              </div>
+              <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+          </div>
       </div>
-      <div id="tab-today"><div class="card"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div 	class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
-      	<div id="tab-history" style="display:none">
-        	<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
-          	<input type="text" class="finput" id="hist-search-name" style="max-width:220px" placeholder="ค้นหาชื่อสมาชิก…" oninput="filterHistory()">
-          	<input type="date" class="finput" id="hist-search-date" style="max-width:180px" onchange="filterHistory()">
-          	<button class="btn btn-ghost btn-sm" onclick="document.getElementById('hist-search-name').value='';document.getElementById('hist-search-date').value='';filterHistory()"><i class="ti ti-x"></i>ล้างค้นหา</button>
-          	<span id="hist-count" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
-        	</div>
-        <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+      <div id="page-booking" class="page active">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600" id="cal-month-label"></div>
+              <div style="display:flex;gap:8px">
+                  <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+                  <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)"><i class="ti ti-chevron-right"></i></button>
+                  <button class="btn btn-orange btn-sm" onclick="openModal('modal-booking')"><i class="ti ti-plus"></i>จองนัดใหม่</button>
+              </div>
+          </div>
+          <div class="card">
+              <div class="cal-grid" style="margin-bottom:4px">
+                  <div class="cal-header-cell">จ</div><div class="cal-header-cell">อ</div><div class="cal-header-cell">พ</div><div class="cal-header-cell">พฤ</div><div class="cal-header-cell">ศ</div><div class="cal-header-cell">ส</div><div class="cal-header-cell">อา</div>
+              </div>
+              <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div id="cal-detail" style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+              <div id="cal-detail-inner"><div style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">แตะวันในปฏิทินเพื่อดูนัด</div></div>
+          </div>
       </div>
-    </div>
-    <div id="page-booking" class="page active">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600" id="cal-month-label"></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
-          <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)"><i class="ti ti-chevron-right"></i></button>
-          <button class="btn btn-orange btn-sm" onclick="openModal('modal-booking')"><i class="ti ti-plus"></i>จองนัดใหม่</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="cal-grid" style="margin-bottom:4px">
-          <div class="cal-header-cell">จ</div><div class="cal-header-cell">อ</div><div class="cal-header-cell">พ</div><div class="cal-header-cell">พฤ</div><div class="cal-header-cell">ศ</div><div class="cal-header-cell">ส</div><div class="cal-header-cell">อา</div>
-        </div>
-        <div class="cal-grid" id="cal-grid"></div>
-      </div>
+  </div>
     </div>
     <div id="page-payments" class="page">
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem" id="pay-kpis"><div class="page-spinner"><div class="spinner"></div></div></div>
@@ -1029,7 +1070,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                     }
       </div>`;
             }).join('');
-            return `<div class="cal-cell${isT ? ' today' : ''}${c.other ? ' other-month' : ''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;
+            const mobileDots = evts.filter(e => e.status !== 'cancelled').map((e, j) =>
+                `<span class="cal-dot-mobile" style="background:${dc[j % dc.length]}"></span>`
+            ).join('');
+            return `<div class="cal-cell${isT ? ' today' : ''}${c.other ? ' other-month' : ''}" onclick="showCalDetail('${c.iso}',${JSON.stringify(evts).replace(/'/g, "\\'")})" style="cursor:pointer"><div class="cal-day-num">${c.day}</div>${dots}${mobileDots}</div>`;
         }).join('');
     }
 
