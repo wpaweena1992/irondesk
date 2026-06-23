@@ -891,7 +891,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             toast('อัปเดตสถานะเรียบร้อย');
             loadSessions();
             if (typeof loadDashboard === 'function') loadDashboard();
-            if (document.getElementById('page-booking').classList.contains('active')) loadBookings();
+            loadBookings();
         } catch (e) {
             toast(e.message, true);
             loadSessions();
@@ -918,7 +918,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     }
 
     async function loadBookings() {
-        try { const rows = await api(`/api/bookings?month=${calMonth}&year=${calYear}`); buildCalendar(rows); } catch (e) { toast(e.message, true); }
+        try {
+            const [rows, sessions] = await Promise.all([
+                api(`/api/bookings?month=${calMonth}&year=${calYear}`),
+                api('/api/sessions').catch(() => [])
+            ]);
+            buildCalendar(rows, sessions);
+        } catch (e) { toast(e.message, true); }
     }
 
     const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -943,7 +949,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             return;
         }
         const rows = evts.map((e, j) => {
-            const cancelled = e.status === 'cancelled';
+            const cancelled = e._cancelled != null ? e._cancelled : (e.status === 'cancelled');
             return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);${cancelled ? 'opacity:.5' : ''}">
         <span style="font-size:12px;color:var(--muted);width:38px;flex-shrink:0">${String(e.booking_time || '').slice(0, 5)}</span>
         <span style="width:9px;height:9px;border-radius:50%;background:${dc[j % dc.length]};flex-shrink:0"></span>
@@ -957,9 +963,21 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         document.getElementById('cal-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function buildCalendar(bookings) {
+    function buildCalendar(bookings, sessions = []) {
         const grid = document.getElementById('cal-grid');
         _calCellData = {};
+        // หาเซสชั่นที่ถูกยกเลิก เพื่อมาทำเครื่องหมายขีดฆ่า booking ที่ตรงกัน
+        const cancelledSessions = (sessions || []).filter(s => s.status === 'cancelled');
+        const isBookingCancelled = (b) => {
+            if (b.status === 'cancelled') return true;
+            const bDate = (b.booking_date || '').toString().slice(0, 10);
+            const bTime = String(b.booking_time || '').slice(0, 5);
+            return cancelledSessions.some(s =>
+                s.member_id == b.member_id &&
+                (s.session_date || '').toString().slice(0, 10) === bDate &&
+                String(s.session_time || '').slice(0, 5) === bTime
+            );
+        };
         const firstDay = new Date(calYear, calMonth - 1, 1); const lastDay = new Date(calYear, calMonth, 0);
         const startDow = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; const cells = [];
         for (let i = 0; i < startDow; i++) { const d = new Date(calYear, calMonth - 1, -startDow + i + 1); cells.push({ day: d.getDate(), other: true, iso: getLocalDate(d) }); }
@@ -968,9 +986,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         const dc = ['#e85d26', '#2563b0', '#2a7d4f', '#b86e00', '#6d3fa0']; const todayIso = getLocalDate();
         grid.innerHTML = cells.map(c => {
             const isT = c.iso === todayIso;
-            const evts = bookings.filter(b => (b.booking_date || '').toString().slice(0, 10) === c.iso);
+            const evts = bookings.filter(b => (b.booking_date || '').toString().slice(0, 10) === c.iso)
+                .map(b => ({ ...b, _cancelled: isBookingCancelled(b) }));
             const dots = evts.map((e, j) => {
-                const cancelled = e.status === 'cancelled';
+                const cancelled = e._cancelled;
                 return `<div class="cal-dot${cancelled ? ' cancelled' : ''}" style="background:${cancelled ? 'var(--surface3)' : dc[j % dc.length] + '22'};color:${cancelled ? 'var(--muted)' : dc[j % dc.length]}">
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${String(e.booking_time || '').slice(0, 5)} ${e.fname}</span>
         ${!cancelled
@@ -982,7 +1001,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                     }
       </div>`;
             }).join('');
-            const mobileDots = evts.filter(e => e.status !== 'cancelled').map((e, j) =>
+            const mobileDots = evts.filter(e => !e._cancelled).map((e, j) =>
                 `<span class="cal-dot-mobile" style="background:${dc[j % dc.length]}"></span>`
             ).join('');
             const cellId = 'cell-' + c.iso;
