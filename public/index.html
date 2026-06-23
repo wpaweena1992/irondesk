@@ -141,7 +141,44 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .db-checking{background:var(--surface2);color:var(--muted)}
 .blurred{filter:blur(6px);transition:filter .25s;user-select:none;pointer-events:none}
 .blurred-chart{filter:blur(8px);transition:filter .25s}
-@media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+/*@media(max-width:960px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.overlay.open{display:block}.main{margin-left:0}.hamburger-btn{display:flex!important}.g2,.g3,.g32{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}}*/
+    @media(max-width:960px) {
+        .sidebar {
+            transform: translateX(-100%)
+        }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+
+        .overlay.open {
+            display: block
+        }
+
+        .main {
+            margin-left: 0
+        }
+
+        .hamburger-btn {
+            display: flex !important
+        }
+
+        .g2, .g3, .g32 {
+            grid-template-columns: 1fr
+        }
+
+        .kpi-grid {
+            grid-template-columns: repeat(2,1fr)
+        }
+
+        .content {
+            padding: 1rem
+        }
+
+        .topbar {
+            padding: .75rem 1rem
+        }
+    }
 /* ใช้ container จัดกึ่งกลางและคุมความกว้าง */
 /*#page-mycheck {
     width: 100%;
@@ -179,6 +216,20 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .login-error{display:none;align-items:center;gap:7px;background:var(--red-lt);color:var(--red);font-size:12.5px;font-weight:500;padding:9px 12px;border-radius:var(--r-md);margin-bottom:14px}
 .login-error.show{display:flex}
 .app-hidden{display:none!important}
+
+    /* ป้องกันตารางล้นจอในทุกหน้า */
+    .card {
+        overflow-x: auto
+    }
+
+    .tbl {
+        min-width: 500px
+    }
+
+    /* pay-kpis responsive */
+    #pay-kpis {
+        grid-template-columns: repeat(auto-fit,minmax(150px,1fr)) !important
+    }
 
 </style>
 </head>
