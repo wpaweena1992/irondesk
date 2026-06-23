@@ -1146,14 +1146,34 @@ async function loadMyInfo(id){
       </div>`;
   }catch(e){toast(e.message,true);detailEl.innerHTML='';}
 }
-function applyPermissions(){
-  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.style.display=isStaffRestricted?'none':'';
-  });
-  const mcCard=document.getElementById('mc-search-card');
-  if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
-}
+//function applyPermissions(){
+//  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
+//    const el=document.getElementById(id);
+//    if(el)el.style.display=isStaffRestricted?'none':'';
+//  });
+//  const mcCard=document.getElementById('mc-search-card');
+//  if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
+    //}
+    function applyPermissions() {
+        ['btn-add-member', 'btn-add-session', 'btn-add-payment'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (isStaffRestricted) {
+                el.disabled = true;
+                el.style.opacity = '.35';
+                el.style.cursor = 'not-allowed';
+                el.title = 'เฉพาะ Admin เท่านั้น';
+            } else {
+                el.disabled = false;
+                el.style.opacity = '';
+                el.style.cursor = '';
+                el.title = '';
+            }
+        });
+        // mc-search-card ไม่ซ่อน เพียงแต่ staff จะถูก autoLoadMyInfo แทน
+        const mcCard = document.getElementById('mc-search-card');
+        if (mcCard) mcCard.style.display = isStaffRestricted ? 'none' : '';
+    }
 
 function initApp(){
   document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
