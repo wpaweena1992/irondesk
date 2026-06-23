@@ -173,6 +173,19 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .cal-dot-mobile{width:7px;height:7px;border-radius:50%;display:inline-block;margin:1px}
 .cal-day-num{font-size:10px}
 #cal-detail{display:block}
+/* หน้าเซสชั่นวันนี้: แปลงตารางเป็นการ์ดบนมือถือ */
+#tab-today .card{padding:0;background:transparent;border:none;box-shadow:none}
+#tab-today .tbl,#tab-today .tbl tbody,#tab-today .tbl tr,#tab-today .tbl td{display:block;width:100%}
+#tab-today .tbl thead{display:none}
+#tab-today .tbl tr{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:6px 14px;margin-bottom:10px}
+#tab-today .tbl tbody tr:hover td{background:transparent}
+#tab-today .tbl td{border:none;border-bottom:1px solid var(--border);padding:9px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13.5px;text-align:right}
+#tab-today .tbl tr td:last-child{border-bottom:none}
+#tab-today .tbl td::before{content:attr(data-label);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:left;flex-shrink:0}
+#tab-today .tbl td:empty{display:none}
+#tab-today .tbl td[data-label="สมาชิก"]{align-items:flex-start}
+#tab-today .tbl td[data-label="สถานะ"] > div{flex-wrap:wrap;justify-content:flex-end}
+#tab-today .tbl td[data-label="สถานะ"] select{flex:1;min-width:0}
 }
 @media(min-width:601px){
 .cal-dot-mobile{display:none}
@@ -816,12 +829,12 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             const sb = s => s === 'done' ? 'badge-green">เสร็จแล้ว' : s === 'active' ? 'badge-orange">กำลังเทรน' : s === 'cancelled' ? 'badge-red">ยกเลิก' : 'badge-blue">นัดไว้';
             document.getElementById('sessions-body').innerHTML = rows.length ? rows.map(s => `
       <tr>
-        <td style="font-weight:600">${String(s.session_time || '').slice(0, 5)}</td>
-        <td><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic || ''}</div></td>
-        <td>${s.type}</td>
-        <td>${s.trainer_name || '—'}</td>
-        <td>${s.hours_used} ชม.</td>
-        <td>
+<td data-label="เวลา" style="font-weight:600">${String(s.session_time || '').slice(0, 5)}</td>
+        <td data-label="สมาชิก"><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic || ''}</div></td>
+        <td data-label="ประเภท">${s.type}</td>
+        <td data-label="เทรนเนอร์">${s.trainer_name || '—'}</td>
+        <td data-label="ชั่วโมง">${s.hours_used} ชม.</td>
+        <td data-label="สถานะ">
           ${(() => {
                     const colors = {
                         done: 'background:#e8f5ee;color:#2a7d4f',
