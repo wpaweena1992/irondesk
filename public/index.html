@@ -27,7 +27,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .staff-avatar{width:32px;height:32px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
 .staff-name{font-size:13px;color:#fff;font-weight:500}
 .staff-role{font-size:11px;color:rgba(255,255,255,.45)}
-.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+    .main {
+        margin-left: 220px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        overflow-x: hidden
+    }
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.9rem 1.75rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .topbar-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600}
 .topbar-sub{font-size:12px;color:var(--muted);margin-top:1px}
@@ -38,13 +45,22 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .tb-btn.primary:hover{background:#d14d1a;border-color:#d14d1a}
 .tb-btn i{font-size:16px}
 .hamburger-btn{display:none}
-.content{padding:1.5rem 1.75rem}
+    .content {
+        padding: 1.5rem 1.75rem;
+        overflow-x: hidden;
+        width: 100%
+    }
 .page{display:none}.page.active{display:block}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.4rem;box-shadow:var(--shadow)}
 .card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .card-title{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.05em}
 .card-title i{font-size:15px}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:1.25rem}
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+        gap: 12px;
+        margin-bottom: 1.25rem
+    }
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.1rem 1.3rem;position:relative;overflow:hidden;transition:box-shadow .2s;box-shadow:var(--shadow)}
 .kpi:hover{box-shadow:var(--shadow-md)}
 .kpi-accent{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
