@@ -907,15 +907,52 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     }
 
     // ฟังก์ชันใหม่สำหรับจับ Event ตอนเลือก Dropdown
+    //async function updateSessionStatus(id, status) {
+    //    try {
+    //        await api('/api/sessions/' + id + '/status', { method: 'PATCH', body: { status } });
+    //        toast('อัปเดตสถานะเรียบร้อย');
+    //        loadSessions();
+    //        if (typeof loadDashboard === 'function') loadDashboard(); // ดึงข้อมูลหน้าภาพรวมใหม่เผื่อมีการคืน/หักชั่วโมง
+    //    } catch (e) {
+    //        toast(e.message, true);
+    //        loadSessions(); // โหลดเซสชั่นใหม่เพื่อคืนค่า Dropdown หากเกิด Error
+    //    }
+    //}
     async function updateSessionStatus(id, status) {
         try {
+            // 1. อัปเดต session status
             await api('/api/sessions/' + id + '/status', { method: 'PATCH', body: { status } });
+
+            // 2. ถ้ายกเลิก session → sync ยกเลิก booking ที่ตรงกันด้วย
+            if (status === 'cancelled') {
+                try {
+                    const sessions = await api('/api/sessions?date=' + getLocalDate());
+                    const s = sessions.find(x => x.id === id) ||
+                        (await api('/api/sessions')).find(x => x.id === id);
+
+                    if (s) {
+                        const bDate = (s.session_date || '').toString().slice(0, 10);
+                        const [y, m] = bDate.split('-');
+                        const bookings = await api(`/api/bookings?month=${parseInt(m)}&year=${parseInt(y)}`);
+                        const matchBooking = bookings.find(b =>
+                            b.member_id == s.member_id &&
+                            String(b.booking_time || '').slice(0, 5) === String(s.session_time || '').slice(0, 5) &&
+                            (b.booking_date || '').toString().slice(0, 10) === bDate &&
+                            b.status !== 'cancelled'
+                        );
+                        if (matchBooking) {
+                            await api('/api/bookings/' + matchBooking.id, { method: 'DELETE' });
+                        }
+                    }
+                } catch (e) { console.warn('booking sync skip:', e.message); }
+            }
+
             toast('อัปเดตสถานะเรียบร้อย');
             loadSessions();
-            if (typeof loadDashboard === 'function') loadDashboard(); // ดึงข้อมูลหน้าภาพรวมใหม่เผื่อมีการคืน/หักชั่วโมง
+            if (typeof loadDashboard === 'function') loadDashboard();
         } catch (e) {
             toast(e.message, true);
-            loadSessions(); // โหลดเซสชั่นใหม่เพื่อคืนค่า Dropdown หากเกิด Error
+            loadSessions();
         }
     }
 
@@ -1044,14 +1081,42 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         } catch (e) { toast(e.message, true); }
     }
 
+    //async function cancelBooking(id) {
+    //    if (!confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?')) return;
+    //    try {
+    //        await api('/api/bookings/' + id, { method: 'DELETE' });
+    //        toast('ยกเลิกการจองแล้ว'); loadBookings();
+    //    } catch (e) { toast(e.message, true); }
+    //}
     async function cancelBooking(id) {
         if (!confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?')) return;
         try {
+            // 1. ดึงข้อมูล booking ก่อนยกเลิก เพื่อหา session ที่ตรงกัน
+            const bookings = await api(`/api/bookings?month=${calMonth}&year=${calYear}`);
+            const b = bookings.find(x => x.id === id);
+
+            // 2. ยกเลิก booking
             await api('/api/bookings/' + id, { method: 'DELETE' });
-            toast('ยกเลิกการจองแล้ว'); loadBookings();
+
+            // 3. ยกเลิก session ที่ตรงกัน (วันที่+เวลา+สมาชิกเดียวกัน)
+            if (b) {
+                try {
+                    const sessions = await api('/api/sessions?date=' + (b.booking_date || '').toString().slice(0, 10));
+                    const matchSession = sessions.find(s =>
+                        s.member_id == b.member_id &&
+                        String(s.session_time || '').slice(0, 5) === String(b.booking_time || '').slice(0, 5) &&
+                        s.status !== 'cancelled'
+                    );
+                    if (matchSession) {
+                        await api('/api/sessions/' + matchSession.id + '/status', { method: 'PATCH', body: { status: 'cancelled' } });
+                    }
+                } catch (e) { console.warn('session sync skip:', e.message); }
+            }
+
+            toast('ยกเลิกการจองแล้ว');
+            loadBookings();
         } catch (e) { toast(e.message, true); }
     }
-
     async function loadPayments() {
         try {
             const d = await api('/api/payments');
