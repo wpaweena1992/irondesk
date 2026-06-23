@@ -981,7 +981,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                 const nameMatch = (s.fname || '') === (b.fname || '');
                 const lnameOk = (!s.lname || !b.lname) || (s.lname === b.lname);
                 return nameMatch && lnameOk;
-            );
+            });
         };
         const firstDay = new Date(calYear, calMonth - 1, 1); const lastDay = new Date(calYear, calMonth, 0);
         const startDow = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; const cells = [];
