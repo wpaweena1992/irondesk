@@ -1169,7 +1169,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
           <div class="card-title"><i class="ti ti-id-badge-2"></i>${m.fname} ${m.lname}</div>
           <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status || 'active')}</span>${isStaffRestricted ? '' : '<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
         </div>
-        <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:0">
+        <div class="kpi-grid" style="margin-bottom:0">
           <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">แพ็กเกจปัจจุบัน</div><div class="kpi-val" style="font-size:17px">${m.pkg_name || '— ไม่มีแพ็กเกจ —'}</div></div>
           <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">วันหมดอายุ</div><div class="kpi-val" style="font-size:17px">${expiryIso || '—'}</div><div class="kpi-sub">${daysLeft != null ? (daysLeft >= 0 ? 'เหลืออีก ' + daysLeft + ' วัน' : 'เกินกำหนด ' + Math.abs(daysLeft) + ' วัน') : ''}</div></div>
           <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">ใช้งานมาแล้ว</div><div class="kpi-val" style="font-size:17px">${daysUsed != null ? daysUsed + ' วัน' : '—'}</div><div class="kpi-sub">เริ่มใช้ ${startIso || '—'}</div></div>
