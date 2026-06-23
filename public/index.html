@@ -1050,8 +1050,17 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             toast('จองนัดและสร้างเซสชั่นแล้ว ✅');
 
             // 3. Auto ไปหน้า Sessions
-            const sessionBtn = document.querySelector('.nav-btn[onclick*="sessions"]');
-            if (sessionBtn) nav('sessions', sessionBtn);
+            //const sessionBtn = document.querySelector('.nav-btn[onclick*="sessions"]');
+            //if (sessionBtn) nav('sessions', sessionBtn);
+            // 3. Refresh sessions ถ้าปลดล็อกแล้ว หรือแค่ refresh ปฏิทิน
+            if (pagesUnlocked) {
+                const sessionBtn = document.querySelector('.nav-btn[onclick*="sessions"]');
+                if (sessionBtn) nav('sessions', sessionBtn);
+            } else {
+                // ยังไม่ปลดล็อก → อยู่หน้าตารางนัดแต่ refresh ปฏิทินใหม่
+                loadBookings();
+                toast('จองนัดและสร้างเซสชั่นแล้ว ✅ (ดูเซสชั่นได้ที่เมนูเซสชั่นวันนี้)');
+            }
 
         } catch (e) { toast(e.message, true); }
     }
