@@ -947,9 +947,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                 } catch (e) { console.warn('booking sync skip:', e.message); }
             }
 
+            //toast('อัปเดตสถานะเรียบร้อย');
+            //loadSessions();
+            //if (typeof loadDashboard === 'function') loadDashboard();
             toast('อัปเดตสถานะเรียบร้อย');
             loadSessions();
             if (typeof loadDashboard === 'function') loadDashboard();
+            if (document.getElementById('page-booking').classList.contains('active')) loadBookings();
         } catch (e) {
             toast(e.message, true);
             loadSessions();
@@ -1113,8 +1117,13 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                 } catch (e) { console.warn('session sync skip:', e.message); }
             }
 
+    //        toast('ยกเลิกการจองแล้ว');
+    //        loadBookings();
+    //    } catch (e) { toast(e.message, true); }
+    //}
             toast('ยกเลิกการจองแล้ว');
             loadBookings();
+            if (document.getElementById('page-sessions').classList.contains('active')) loadSessions();
         } catch (e) { toast(e.message, true); }
     }
     async function loadPayments() {
