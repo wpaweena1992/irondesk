@@ -1015,8 +1015,8 @@ async function populateSelects(){
 
 async function checkHealth(){
   const el=document.getElementById('db-status');
-  try{await api('/api/health');el.className='db-status db-ok';el.innerHTML='<i class="ti ti-database"></i><span>Database เชื่อมต่อแล้ว</span>';}
-  catch(e){el.className='db-status db-err';el.innerHTML='<i class="ti ti-database-off"></i><span>Database ออฟไลน์</span>';}
+  try{await api('/api/health');el.className='db-status db-ok';el.innerHTML='<i class="ti ti-database"></i><span></span>';}
+  catch(e){el.className='db-status db-err';el.innerHTML='<i class="ti ti-database-off"></i><span></span>';}
 }
 
 let mcSearchTimer=null;
@@ -1149,7 +1149,7 @@ async function loadMyInfo(id){
 //function applyPermissions(){
 //  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
 //    const el=document.getElementById(id);
-//    if(el)el.style.display=isStaffRestricted?'none':'';
+//    if(el)el.style.display=isStaffRestricted?'none':'';ท
 //  });
 //  const mcCard=document.getElementById('mc-search-card');
 //  if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
@@ -1190,8 +1190,8 @@ function initApp(){
       b.classList.remove('active');
       if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'mycheck'"))b.classList.add('active');
     });
-    document.getElementById('page-title').textContent='เช็คข้อมูลสมาชิก';
-    document.getElementById('page-sub').textContent='ค้นหาและดูข้อมูลส่วนตัวของสมาชิก';
+    document.getElementById('page-title').textContent='ข้อมูลสมาชิก';
+    document.getElementById('page-sub').textContent='ค้นหาและดูข้อมูล';
     populateSelects().then(()=>initMyCheck());
   }else{
     populateSelects().then(()=>loadBookings());
