@@ -1280,8 +1280,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             }
         });
         // mc-search-card ไม่ซ่อน เพียงแต่ staff จะถูก autoLoadMyInfo แทน
+        //const mcCard = document.getElementById('mc-search-card');
+        //if (mcCard) mcCard.style.display = isStaffRestricted ? 'none' : '';
+        // ไม่ซ่อน card แค่ซ่อน input ค้นหาข้างใน (layout ยังเต็มเหมือน admin)
         const mcCard = document.getElementById('mc-search-card');
-        if (mcCard) mcCard.style.display = isStaffRestricted ? 'none' : '';
+        if (mcCard) mcCard.style.display = ''; // แสดงอยู่เสมอ ไม่ซ่อน
+
+        const mcSearch = document.getElementById('mc-search');
+        if (mcSearch) mcSearch.style.display = isStaffRestricted ? 'none' : '';
     }
 
     function initApp() {
