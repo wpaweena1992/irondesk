@@ -1031,45 +1031,73 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     // พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
     // ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
     const STAFF_MEMBER_QUERY = {
-        'Sirinthip': 'ศิรินทิพย์(พี่แนน)',
-        'Chef': 'น้องเซฟ',
-        'Rujira': 'รุจิรา(พี่ป่าน)',
-        'Hathaiporn': 'หทัยพร(พี่นิว)',
-        'Irene': 'Ireane',
-        'Kunanon': 'คุณานนท์(พี่แม็ก)',
-        'Kesinee': 'พี่เก๋(เกศสินี)',
-        'Unakorn': 'อุณากร์(พี่ตุ๊ก)',
-        'Phattharaseth': 'ภัทรเศรษฐ์(พี่บ๋อม) (พี่คราม)',
-        'Sukanya': 'สุกัญญา(พี่โอ๋&พี่เก๋)',
-        'Patcharee': 'พัชรี(พี่น้อง)',
-        'Praewphan': 'แพรวพรรณ(ปาปิ้ง&คุณแม่)',
-        'Ariel&Jinglebell': 'แอเรียว&จิงเกอเบล',
-        'Nattasumon': 'ณัฏฐ์สุมน(พี่จา)',
-        'Nuchjaree': 'นุชจรีย์ (พี่นุช)(พี่หนึ่ง)',
-        'Kesinee': 'น้องเซฟ',
-        'Kesinee': 'แอเรียว&จิงเกอเบล',
-        'Unakorn': 'แอเรียว&จิงเกอเบล'
+        'Sirinthip': ['ศิรินทิพย์(พี่แนน)'],
+        'Chef': ['น้องเซฟ'],
+        'Rujira': ['รุจิรา(พี่ป่าน)'],
+        'Hathaiporn': ['หทัยพร(พี่นิว)'],
+        'Irene': ['Ireane'],
+        'Kunanon': ['คุณานนท์(พี่แม็ก)'],
+        'Kesinee': ['พี่เก๋(เกศสินี)', 'น้องเซฟ', 'แอเรียว&จิงเกอเบล'],
+        'Unakorn': ['อุณากร์(พี่ตุ๊ก)', 'แอเรียว&จิงเกอเบล'],
+        'Phattharaseth': ['ภัทรเศรษฐ์(พี่บ๋อม) (พี่คราม)'],
+        'Sukanya': ['สุกัญญา(พี่โอ๋&พี่เก๋)'],
+        'Patcharee': ['พัชรี(พี่น้อง)'],
+        'Praewphan': ['แพรวพรรณ(ปาปิ้ง&คุณแม่)'],
+        'Nattasumon': ['ณัฏฐ์สุมน(พี่จา)'],
+        'Nuchjaree': ['นุชจรีย์ (พี่นุช)(พี่หนึ่ง)'],
     };
 
     async function autoLoadMyInfo() {
         const detailEl = document.getElementById('mc-detail');
         detailEl.innerHTML = '<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
-        const q = STAFF_MEMBER_QUERY[currentUser] || currentUser;
+
+        // ดึง queries ของ user นี้ (รองรับทั้ง array และ string เดี่ยว)
+        const rawQuery = STAFF_MEMBER_QUERY[currentUser] || [currentUser];
+        const queries = Array.isArray(rawQuery) ? rawQuery : [rawQuery];
+
         try {
-            const rows = await api('/api/members?q=' + encodeURIComponent(q));
+            // ค้นหาทุก query แล้วรวมผลลัพธ์ (กรอง id ซ้ำออก)
+            const allResults = await Promise.all(
+                queries.map(q => api('/api/members?q=' + encodeURIComponent(q)))
+            );
+            const seen = new Set();
+            const rows = allResults.flat().filter(m => {
+                if (seen.has(m.id)) return false;
+                seen.add(m.id);
+                return true;
+            });
+
             if (!rows.length) {
                 detailEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">ไม่พบข้อมูลสมาชิกของคุณในระบบ<br>กรุณาติดต่อแอดมิน</div>';
                 return;
             }
+
+            // พบคนเดียว → โหลดเลย
             if (rows.length === 1) {
                 loadMyInfo(rows[0].id);
                 return;
             }
-            detailEl.innerHTML = '<div style="color:var(--muted);font-size:12.5px;margin-bottom:8px">พบชื่อที่ตรงกันหลายรายการ กรุณาเลือกรายการของคุณ</div>' + rows.map(m => `<div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
-        <div class="av-row" style="flex:1"><div class="av av-${m.color || 'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone || ''}</div></div></div>
-        <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
-      </div>`).join('');
-        } catch (e) { toast(e.message, true); detailEl.innerHTML = ''; }
+
+            // พบหลายคน → แสดงรายการให้เลือก
+            detailEl.innerHTML =
+                '<div style="color:var(--muted);font-size:12.5px;margin-bottom:8px">เลือกดูข้อมูลสมาชิกที่ต้องการ</div>' +
+                rows.map(m => `
+                <div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
+                    <div class="av-row" style="flex:1">
+                        <div class="av av-${m.color || 'orange'}">${m.fname[0]}</div>
+                        <div>
+                            <div class="av-name">${m.fname} ${m.lname}</div>
+                            <div class="av-sub">${m.phone || ''}</div>
+                        </div>
+                    </div>
+                    <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
+                </div>
+            `).join('');
+
+        } catch (e) {
+            toast(e.message, true);
+            detailEl.innerHTML = '';
+        }
     }
 
     function initMyCheck() {
