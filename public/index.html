@@ -1335,7 +1335,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             detailEl.innerHTML = `
       <div class="card mb">
         <div class="card-hd">
-          <div class="card-title"><i class="ti ti-id-badge-2"></i>${m.fname} ${m.lname}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px"><i class="ti ti-id-badge-2" style="color:var(--orange);font-size:20px"></i>${m.fname} ${m.lname}</div>
           <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status || 'active')}</span>${isStaffRestricted ? '' : '<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
         </div>
         <div class="kpi-grid" style="margin-bottom:0;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
