@@ -894,12 +894,16 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <td>${s.trainer_name || '—'}</td>
         <td>${s.hours_used} ชม.</td>
         <td>
-          ${isStaffRestricted ? `<span class="badge ${sb(s.status)}</span>` : `<select class="fselect" style="padding:4px 8px; font-size:12.5px; width:auto; cursor:pointer;" onchange="updateSessionStatus(${s.id}, this.value)">
-            <option value="upcoming" ${s.status === 'upcoming' ? 'selected' : ''}>นัดไว้</option>
-            <option value="active" ${s.status === 'active' ? 'selected' : ''}>กำลังเทรน</option>
-            <option value="done" ${s.status === 'done' ? 'selected' : ''}>เสร็จแล้ว</option>
-            <option value="cancelled" ${s.status === 'cancelled' ? 'selected' : ''}>ยกเลิก</option>
-          </select>`}
+          ${isStaffRestricted ? `<span class="badge ${sb(s.status)}</span>` : `
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="badge ${sb(s.status)}" style="cursor:pointer;min-width:80px;justify-content:center"></span>
+            <select class="fselect" style="padding:4px 8px;font-size:12px;width:110px;cursor:pointer;border-radius:var(--r-md)" onchange="updateSessionStatus(${s.id},this.value)">
+              <option value="upcoming" ${s.status === 'upcoming' ? 'selected' : ''}>นัดไว้</option>
+              <option value="active" ${s.status === 'active' ? 'selected' : ''}>กำลังเทรน</option>
+              <option value="done" ${s.status === 'done' ? 'selected' : ''}>เสร็จแล้ว</option>
+              <option value="cancelled" ${s.status === 'cancelled' ? 'selected' : ''}>ยกเลิก</option>
+            </select>
+          </div>`}
         </td>
         <td></td>
       </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
