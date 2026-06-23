@@ -436,595 +436,600 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 </div><!-- /app-root -->
 
 <script>
-const API='';let charts={};let calYear=new Date().getFullYear();let calMonth=new Date().getMonth()+1;
-let amountsHidden=false;
-/* ===== LOGIN ===== */
-const APP_USERS={
-    'admin': 'issara2010',
-    'staff': 'studio123',
-    'Sirinthip': 'issara00',
-    'Patcharee': 'issara01',
-    'Praewphan': 'issara02',
-    'Nattasumon': 'issara03',
-    'Sukanya': 'issara04',
-    'Unakorn': 'issara05',
-    'Kesinee': 'issara06',
-    'Kunanon': 'issara07',
-    'Hathaiporn': 'issara08',
-    'Rujira': 'issara09',
-    'Phattharaseth': 'issara10',
-    'Irene': 'issara11'
-}; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: password)
+    const API = ''; let charts = {}; let calYear = new Date().getFullYear(); let calMonth = new Date().getMonth() + 1;
+    let amountsHidden = false;
+    /* ===== LOGIN ===== */
+    const APP_USERS = {
+        'admin': 'issara2010',
+        'staff': 'studio123',
+        'Sirinthip': 'issara00',
+        'Patcharee': 'issara01',
+        'Praewphan': 'issara02',
+        'Nattasumon': 'issara03',
+        'Sukanya': 'issara04',
+        'Unakorn': 'issara05',
+        'Kesinee': 'issara06',
+        'Kunanon': 'issara07',
+        'Hathaiporn': 'issara08',
+        'Rujira': 'issara09',
+        'Phattharaseth': 'issara10',
+        'Irene': 'issara11',
+        'Nuchjaree': 'issara12'
+    }; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: password)
 
-// username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
-// username อื่นๆ ทั้งหมด = พนักงานทั่วไป → ทำรายการ (เพิ่ม/แก้ไข/ลบ) ได้เฉพาะหน้า "ตารางนัด" เท่านั้น หน้าอื่นดูได้อย่างเดียว
-const ADMIN_USERS=['admin'];
-let currentUser=null;
-let isStaffRestricted=false;
+    // username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
+    // username อื่นๆ ทั้งหมด = พนักงานทั่วไป → ทำรายการ (เพิ่ม/แก้ไข/ลบ) ได้เฉพาะหน้า "ตารางนัด" เท่านั้น หน้าอื่นดูได้อย่างเดียว
+    const ADMIN_USERS = ['admin'];
+    let currentUser = null;
+    let isStaffRestricted = false;
 
-function setSessionRole(u){
-  currentUser=u;
-  isStaffRestricted=!ADMIN_USERS.includes(u);
-  const avatarEl=document.querySelector('.staff-avatar');
-  const nameEl=document.querySelector('.staff-name');
-  const roleEl=document.querySelector('.staff-role');
-  if(avatarEl)avatarEl.textContent=(u||'I')[0].toUpperCase();
-  if(nameEl)nameEl.textContent=u;
-  if(roleEl)roleEl.textContent=isStaffRestricted?'สมาชิก · ทำรายการได้เฉพาะตารางนัด':'แอดมิน · สิทธิ์เต็ม';
-}
+    function setSessionRole(u) {
+        currentUser = u;
+        isStaffRestricted = !ADMIN_USERS.includes(u);
+        const avatarEl = document.querySelector('.staff-avatar');
+        const nameEl = document.querySelector('.staff-name');
+        const roleEl = document.querySelector('.staff-role');
+        if (avatarEl) avatarEl.textContent = (u || 'I')[0].toUpperCase();
+        if (nameEl) nameEl.textContent = u;
+        if (roleEl) roleEl.textContent = isStaffRestricted ? 'สมาชิก · ทำรายการได้เฉพาะตารางนัด' : 'แอดมิน · สิทธิ์เต็ม';
+    }
 
-function showApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app-root').classList.remove('app-hidden');
-  initApp();
-}
-function doLogin(){
-  const u=document.getElementById('login-user').value.trim();
-  const p=document.getElementById('login-pass').value;
-  const errEl=document.getElementById('login-error');
-  if(!u||!p){
-    document.getElementById('login-error-msg').textContent='กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
-    errEl.classList.add('show');
-    return;
-  }
-  if(APP_USERS[u]&&APP_USERS[u]===p){
-    errEl.classList.remove('show');
-    try{sessionStorage.setItem('issara_auth_user',u);}catch(e){}
-    setSessionRole(u);
-    showApp();
-  }else{
-    document.getElementById('login-error-msg').textContent='ผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-    errEl.classList.add('show');
-    document.getElementById('login-pass').value='';
-    document.getElementById('login-pass').focus();
-  }
-}
-function doLogout(){
-  try{sessionStorage.removeItem('issara_auth_user');}catch(e){}
-  location.reload();
-}
-(function checkExistingSession(){
-  let savedUser=null;
-  try{savedUser=sessionStorage.getItem('issara_auth_user');}catch(e){}
-  if(savedUser&&APP_USERS[savedUser]){
-    setSessionRole(savedUser);
-    document.addEventListener('DOMContentLoaded',showApp);
-  }
-})();
-/* ===== END LOGIN ===== */
-function getLocalDate(date=new Date()){return date.toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});}
-async function api(path,opts={}){const res=await fetch(API+path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});const data=await res.json();if(!res.ok)throw new Error(data.error||'เกิดข้อผิดพลาด');return data;}
-function toast(msg,isErr=false){const t=document.getElementById('toast');t.className='toast '+(isErr?'error':'success');t.querySelector('i').className=isErr?'ti ti-alert-circle':'ti ti-circle-check';document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
-const pageMeta={dashboard:['ภาพรวม','ยินดีต้อนรับกลับ'],members:['สมาชิก','จัดการข้อมูลสมาชิก'],packages:['แพ็กเกจ','แพ็กเกจและราคา'],sessions:['เซสชั่น','บันทึกและติดตามการเทรน'],booking:['ตารางนัด','ปฏิทินการจองและนัดหมาย'],payments:['รายรับ','ติดตามการเงิน'],mycheck:['เช็คข้อมูลสมาชิก','ค้นหาและดูข้อมูลส่วนตัวของสมาชิก']};
+    function showApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-root').classList.remove('app-hidden');
+        initApp();
+    }
+    function doLogin() {
+        const u = document.getElementById('login-user').value.trim();
+        const p = document.getElementById('login-pass').value;
+        const errEl = document.getElementById('login-error');
+        if (!u || !p) {
+            document.getElementById('login-error-msg').textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
+            errEl.classList.add('show');
+            return;
+        }
+        if (APP_USERS[u] && APP_USERS[u] === p) {
+            errEl.classList.remove('show');
+            try { sessionStorage.setItem('issara_auth_user', u); } catch (e) { }
+            setSessionRole(u);
+            showApp();
+        } else {
+            document.getElementById('login-error-msg').textContent = 'ผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+            errEl.classList.add('show');
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-pass').focus();
+        }
+    }
+    function doLogout() {
+        try { sessionStorage.removeItem('issara_auth_user'); } catch (e) { }
+        location.reload();
+    }
+    (function checkExistingSession() {
+        let savedUser = null;
+        try { savedUser = sessionStorage.getItem('issara_auth_user'); } catch (e) { }
+        if (savedUser && APP_USERS[savedUser]) {
+            setSessionRole(savedUser);
+            document.addEventListener('DOMContentLoaded', showApp);
+        }
+    })();
+    /* ===== END LOGIN ===== */
+    function getLocalDate(date = new Date()) { return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }); }
+    async function api(path, opts = {}) { const res = await fetch(API + path, { headers: { 'Content-Type': 'application/json' }, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined }); const data = await res.json(); if (!res.ok) throw new Error(data.error || 'เกิดข้อผิดพลาด'); return data; }
+    function toast(msg, isErr = false) { const t = document.getElementById('toast'); t.className = 'toast ' + (isErr ? 'error' : 'success'); t.querySelector('i').className = isErr ? 'ti ti-alert-circle' : 'ti ti-circle-check'; document.getElementById('toast-msg').textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+    const pageMeta = { dashboard: ['ภาพรวม', 'ยินดีต้อนรับกลับ'], members: ['สมาชิก', 'จัดการข้อมูลสมาชิก'], packages: ['แพ็กเกจ', 'แพ็กเกจและราคา'], sessions: ['เซสชั่น', 'บันทึกและติดตามการเทรน'], booking: ['ตารางนัด', 'ปฏิทินการจองและนัดหมาย'], payments: ['รายรับ', 'ติดตามการเงิน'], mycheck: ['เช็คข้อมูลสมาชิก', 'ค้นหาและดูข้อมูลส่วนตัวของสมาชิก'] };
 
-const PIN_EXEMPT_PAGES=['booking','mycheck','packages']; // หน้าที่ไม่ต้องใส่รหัส: ตารางนัด, เช็คข้อมูลสมาชิก, แพ็กเกจ
+    const PIN_EXEMPT_PAGES = ['booking', 'mycheck', 'packages']; // หน้าที่ไม่ต้องใส่รหัส: ตารางนัด, เช็คข้อมูลสมาชิก, แพ็กเกจ
 
-function nav(id,btn){
-  if(!PIN_EXEMPT_PAGES.includes(id)&&!pagesUnlocked){
-    pendingNav={id,btn};
-    const pinInput=document.getElementById('pin-input');
-    if(pinInput)pinInput.value='';
-    closeSidebar();
-    openModal('modal-pin');
-    return;
-  }
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  btn.classList.add('active');
-  const[title,sub]=pageMeta[id]||[id,''];
-  document.getElementById('page-title').textContent=title;
-  document.getElementById('page-sub').textContent=sub;
-  document.getElementById('btn-toggle-pay').style.display=id==='payments'?'flex':'none';
-  closeSidebar();loadPage(id);
-}
+    function nav(id, btn) {
+        if (!PIN_EXEMPT_PAGES.includes(id) && !pagesUnlocked) {
+            pendingNav = { id, btn };
+            const pinInput = document.getElementById('pin-input');
+            if (pinInput) pinInput.value = '';
+            closeSidebar();
+            openModal('modal-pin');
+            return;
+        }
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active');
+        btn.classList.add('active');
+        const [title, sub] = pageMeta[id] || [id, ''];
+        document.getElementById('page-title').textContent = title;
+        document.getElementById('page-sub').textContent = sub;
+        document.getElementById('btn-toggle-pay').style.display = id === 'payments' ? 'flex' : 'none';
+        closeSidebar(); loadPage(id);
+    }
 
-const APP_PIN='20102535'; // เปลี่ยนรหัสเข้าใช้งานหน้าที่ล็อกไว้ได้ที่นี่
-let pagesUnlocked=false;
-let pendingNav=null;
+    const APP_PIN = '20102535'; // เปลี่ยนรหัสเข้าใช้งานหน้าที่ล็อกไว้ได้ที่นี่
+    let pagesUnlocked = false;
+    let pendingNav = null;
 
-function verifyPagePin(){
-  const input=document.getElementById('pin-input');
-  const val=input.value.trim();
-  if(!val){toast('กรุณากรอกรหัส',true);return;}
-  if(val===APP_PIN){
-    pagesUnlocked=true;
-    closeModal('modal-pin');
-    if(pendingNav){nav(pendingNav.id,pendingNav.btn);pendingNav=null;}
-  }else{
-    toast('รหัสไม่ถูกต้อง',true);
-    input.value='';
-    input.focus();
-  }
-}
+    function verifyPagePin() {
+        const input = document.getElementById('pin-input');
+        const val = input.value.trim();
+        if (!val) { toast('กรุณากรอกรหัส', true); return; }
+        if (val === APP_PIN) {
+            pagesUnlocked = true;
+            closeModal('modal-pin');
+            if (pendingNav) { nav(pendingNav.id, pendingNav.btn); pendingNav = null; }
+        } else {
+            toast('รหัสไม่ถูกต้อง', true);
+            input.value = '';
+            input.focus();
+        }
+    }
 
-function toggleAmounts(){
-  amountsHidden=!amountsHidden;
-  const btn=document.getElementById('btn-toggle-pay');
-  const label=document.getElementById('btn-toggle-pay-label');
-  if(amountsHidden){btn.querySelector('i').className='ti ti-eye';label.textContent='แสดงยอด';}
-  else{btn.querySelector('i').className='ti ti-eye-off';label.textContent='ซ่อนยอด';}
-  document.querySelectorAll('.pay-amount').forEach(el=>el.classList.toggle('blurred',amountsHidden));
-  document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart',amountsHidden);
-}
+    function toggleAmounts() {
+        amountsHidden = !amountsHidden;
+        const btn = document.getElementById('btn-toggle-pay');
+        const label = document.getElementById('btn-toggle-pay-label');
+        if (amountsHidden) { btn.querySelector('i').className = 'ti ti-eye'; label.textContent = 'แสดงยอด'; }
+        else { btn.querySelector('i').className = 'ti ti-eye-off'; label.textContent = 'ซ่อนยอด'; }
+        document.querySelectorAll('.pay-amount').forEach(el => el.classList.toggle('blurred', amountsHidden));
+        document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart', amountsHidden);
+    }
 
-function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('open');}
-function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-function switchTab(btn,id){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['tab-today','tab-history'].forEach(t=>document.getElementById(t).style.display='none');document.getElementById(id).style.display='block';if(id==='tab-history')loadSessionHistory();}
-function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-function loadPage(id){if(id==='dashboard')loadDashboard();if(id==='members')loadMembers();if(id==='packages')loadPackages();if(id==='sessions')loadSessions();if(id==='booking')loadBookings();if(id==='payments')loadPayments();if(id==='mycheck')initMyCheck();}
-const DAYS_TH=['จ','อ','พ','พฤ','ศ','ส','อา'];
-const pkgColors={PT_hours:'#e85d26',monthly:'#2563b0',class_sessions:'#2a7d4f',bundle:'#6d3fa0'};
-const pkgLabels={PT_hours:'PT ชั่วโมง',monthly:'รายเดือน',class_sessions:'คลาสกลุ่ม',bundle:'บันเดิล'};
+    function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('open'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+    function switchTab(btn, id) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');['tab-today', 'tab-history'].forEach(t => document.getElementById(t).style.display = 'none'); document.getElementById(id).style.display = 'block'; if (id === 'tab-history') loadSessionHistory(); }
+    function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+    function loadPage(id) { if (id === 'dashboard') loadDashboard(); if (id === 'members') loadMembers(); if (id === 'packages') loadPackages(); if (id === 'sessions') loadSessions(); if (id === 'booking') loadBookings(); if (id === 'payments') loadPayments(); if (id === 'mycheck') initMyCheck(); }
+    const DAYS_TH = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+    const pkgColors = { PT_hours: '#e85d26', monthly: '#2563b0', class_sessions: '#2a7d4f', bundle: '#6d3fa0' };
+    const pkgLabels = { PT_hours: 'PT ชั่วโมง', monthly: 'รายเดือน', class_sessions: 'คลาสกลุ่ม', bundle: 'บันเดิล' };
 
-async function loadDashboard(){
-  try{
-    const d=await api('/api/dashboard');
-    document.getElementById('dash-kpis').innerHTML=`
+    async function loadDashboard() {
+        try {
+            const d = await api('/api/dashboard');
+            document.getElementById('dash-kpis').innerHTML = `
       <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">สมาชิกทั้งหมด</div><div class="kpi-val">${d.total_members} <span class="kpi-unit">คน</span></div><div class="kpi-sub">แอคทีฟ ${d.active_members} คน</div></div>
       <div class="kpi" style="display:none"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val">${Number(d.revenue_month).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub">ค้างชำระ ฿${Number(d.pending_amount).toLocaleString()}</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">เซสชั่นวันนี้</div><div class="kpi-val">${d.sessions_today} <span class="kpi-unit">เซสชั่น</span></div><div class="kpi-sub">เสร็จแล้ว ${d.done_today} รายการ</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">แพ็กเกจใกล้หมด</div><div class="kpi-val">${d.expiring_members} <span class="kpi-unit">ราย</span></div><div class="kpi-sub">ต้องต่ออายุเร็วๆนี้</div></div>`;
-    const alertColors={expiring:['amber','ti-clock-exclamation','var(--amber-lt)'],expired:['red','ti-calendar-x','var(--red-lt)']};
-    document.getElementById('dash-alerts').innerHTML=d.alerts.length?d.alerts.map(a=>{const[c,ic,bg]=alertColors[a.status]||['blue','ti-info-circle','var(--blue-lt)'];const hl=a.hours_left!=null?` — เหลือ ${a.hours_left} ชม.`:'';return`<div class="alert-item" style="background:${bg}"><i class="ti ${ic} alert-icon" style="color:var(--${c})"></i><div><div style="font-weight:500;font-size:13px">${a.fname} ${a.lname}${hl}</div><div style="font-size:11px;color:var(--muted)">${a.pkg_name} · หมด ${a.expiry_date}</div></div></div>`;}).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">ไม่มีการแจ้งเตือน ✓</div>';
-    const todaySessions=await api('/api/sessions?date='+getLocalDate());
-    const sb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
-    document.getElementById('dash-sessions').innerHTML=todaySessions.length?todaySessions.slice(0,6).map(s=>`<div class="session-row"><div style="flex:1"><div class="session-name">${s.fname} ${s.lname}</div><div class="session-meta">${s.type} · ${s.trainer_name||'—'} · ${s.topic||''}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(s.status)}</span><span style="font-size:12px;color:var(--muted)">${String(s.session_time||'').slice(0,5)}</span></div></div>`).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">ยังไม่มีเซสชั่นวันนี้</div>';
-    const labels=[],vals=[];
-    for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=getLocalDate(dt);const found=d.revenue7.find(r=>(r.day||'').toString().slice(0,10)===iso);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);vals.push(found?Number(found.total):0);}
-    destroyChart('revenueChart');
-    charts.revenueChart=new Chart(document.getElementById('revenueChart'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:vals.map((_,i)=>i===6?'#e85d26':'rgba(232,93,38,.25)'),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},callback:v=>'฿'+v.toLocaleString()}}}}});
-    destroyChart('pkgChart');
-    if(d.pkgDist.length){charts.pkgChart=new Chart(document.getElementById('pkgChart'),{type:'doughnut',data:{labels:d.pkgDist.map(p=>pkgLabels[p.type]||p.type),datasets:[{data:d.pkgDist.map(p=>p.count),backgroundColor:d.pkgDist.map(p=>pkgColors[p.type]||'#888'),borderWidth:0,spacing:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'65%'}});document.getElementById('pkg-legend').innerHTML=d.pkgDist.map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:${pkgColors[p.type]||'#888'};display:inline-block"></span>${pkgLabels[p.type]||p.type}</span><span style="font-weight:600">${p.count} คน</span></div>`).join('');}
-  }catch(e){toast(e.message,true);}
-}
+            const alertColors = { expiring: ['amber', 'ti-clock-exclamation', 'var(--amber-lt)'], expired: ['red', 'ti-calendar-x', 'var(--red-lt)'] };
+            document.getElementById('dash-alerts').innerHTML = d.alerts.length ? d.alerts.map(a => { const [c, ic, bg] = alertColors[a.status] || ['blue', 'ti-info-circle', 'var(--blue-lt)']; const hl = a.hours_left != null ? ` — เหลือ ${a.hours_left} ชม.` : ''; return `<div class="alert-item" style="background:${bg}"><i class="ti ${ic} alert-icon" style="color:var(--${c})"></i><div><div style="font-weight:500;font-size:13px">${a.fname} ${a.lname}${hl}</div><div style="font-size:11px;color:var(--muted)">${a.pkg_name} · หมด ${a.expiry_date}</div></div></div>`; }).join('') : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">ไม่มีการแจ้งเตือน ✓</div>';
+            const todaySessions = await api('/api/sessions?date=' + getLocalDate());
+            const sb = s => s === 'done' ? 'badge-green">เสร็จแล้ว' : s === 'active' ? 'badge-orange">กำลังเทรน' : s === 'cancelled' ? 'badge-red">ยกเลิก' : 'badge-blue">นัดไว้';
+            document.getElementById('dash-sessions').innerHTML = todaySessions.length ? todaySessions.slice(0, 6).map(s => `<div class="session-row"><div style="flex:1"><div class="session-name">${s.fname} ${s.lname}</div><div class="session-meta">${s.type} · ${s.trainer_name || '—'} · ${s.topic || ''}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(s.status)}</span><span style="font-size:12px;color:var(--muted)">${String(s.session_time || '').slice(0, 5)}</span></div></div>`).join('') : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem">ยังไม่มีเซสชั่นวันนี้</div>';
+            const labels = [], vals = [];
+            for (let i = 6; i >= 0; i--) { const dt = new Date(); dt.setDate(dt.getDate() - i); const iso = getLocalDate(dt); const found = d.revenue7.find(r => (r.day || '').toString().slice(0, 10) === iso); labels.push(DAYS_TH[dt.getDay() === 0 ? 6 : dt.getDay() - 1]); vals.push(found ? Number(found.total) : 0); }
+            destroyChart('revenueChart');
+            charts.revenueChart = new Chart(document.getElementById('revenueChart'), { type: 'bar', data: { labels, datasets: [{ data: vals, backgroundColor: vals.map((_, i) => i === 6 ? '#e85d26' : 'rgba(232,93,38,.25)'), borderRadius: 5, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#7a7a72', font: { size: 11 } } }, y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { color: '#7a7a72', font: { size: 11 }, callback: v => '฿' + v.toLocaleString() } } } } });
+            destroyChart('pkgChart');
+            if (d.pkgDist.length) { charts.pkgChart = new Chart(document.getElementById('pkgChart'), { type: 'doughnut', data: { labels: d.pkgDist.map(p => pkgLabels[p.type] || p.type), datasets: [{ data: d.pkgDist.map(p => p.count), backgroundColor: d.pkgDist.map(p => pkgColors[p.type] || '#888'), borderWidth: 0, spacing: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' } }); document.getElementById('pkg-legend').innerHTML = d.pkgDist.map(p => `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:${pkgColors[p.type] || '#888'};display:inline-block"></span>${pkgLabels[p.type] || p.type}</span><span style="font-weight:600">${p.count} คน</span></div>`).join(''); }
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function loadMembers(q='',status=''){
-  try{
-    let url='/api/members?';if(q)url+='q='+encodeURIComponent(q)+'&';if(status)url+='status='+status;
-    const rows=await api(url);const tbody=document.getElementById('members-body');
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ไม่พบสมาชิก</td></tr>';return;}
-    const sb=s=>s==='active'?'badge-green">แอคทีฟ':s==='expiring'?'badge-amber">ใกล้หมด':s==='expired'?'badge-red">หมดอายุ':'badge-gray">ไม่ระบุ';
-    tbody.innerHTML=rows.map(m=>{
-      const hu=m.hours_total!=null?m.hours_total-(m.hours_used||0):null;
-      const pct=m.hours_total?Math.round(hu/m.hours_total*100):null;
-      const hh=hu!=null?`<div style="min-width:100px"><div style="font-size:13px;font-weight:500">${hu.toFixed(1)} / ${m.hours_total} ชม.</div><div class="pkg-bar"><div class="pkg-fill" style="width:${Math.max(0,pct)}%;background:${pct<20?'var(--red)':pct<40?'var(--amber)':'var(--green)'}"></div></div></div>`:'<span style="color:var(--muted)">—</span>';
-      return`<tr>
-        <td><div class="av-row"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.trainer_name||'ไม่มีเทรนเนอร์'}</div></div></div></td>
-        <td>${m.phone}</td><td>${m.pkg_name||'—'}</td><td>${hh}</td>
-        <td style="font-size:13px">${m.expiry_date||'—'}</td>
-        <td><span class="badge ${sb(m.status||'active')}</span></td>
-        <td>${isStaffRestricted?'<span style="color:var(--faint);font-size:12px">ดูอย่างเดียว</span>':`<div style="display:flex;gap:4px">
+    async function loadMembers(q = '', status = '') {
+        try {
+            let url = '/api/members?'; if (q) url += 'q=' + encodeURIComponent(q) + '&'; if (status) url += 'status=' + status;
+            const rows = await api(url); const tbody = document.getElementById('members-body');
+            if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ไม่พบสมาชิก</td></tr>'; return; }
+            const sb = s => s === 'active' ? 'badge-green">แอคทีฟ' : s === 'expiring' ? 'badge-amber">ใกล้หมด' : s === 'expired' ? 'badge-red">หมดอายุ' : 'badge-gray">ไม่ระบุ';
+            tbody.innerHTML = rows.map(m => {
+                const hu = m.hours_total != null ? m.hours_total - (m.hours_used || 0) : null;
+                const pct = m.hours_total ? Math.round(hu / m.hours_total * 100) : null;
+                const hh = hu != null ? `<div style="min-width:100px"><div style="font-size:13px;font-weight:500">${hu.toFixed(1)} / ${m.hours_total} ชม.</div><div class="pkg-bar"><div class="pkg-fill" style="width:${Math.max(0, pct)}%;background:${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}"></div></div></div>` : '<span style="color:var(--muted)">—</span>';
+                return `<tr>
+        <td><div class="av-row"><div class="av av-${m.color || 'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.trainer_name || 'ไม่มีเทรนเนอร์'}</div></div></div></td>
+        <td>${m.phone}</td><td>${m.pkg_name || '—'}</td><td>${hh}</td>
+        <td style="font-size:13px">${m.expiry_date || '—'}</td>
+        <td><span class="badge ${sb(m.status || 'active')}</span></td>
+        <td>${isStaffRestricted ? '<span style="color:var(--faint);font-size:12px">ดูอย่างเดียว</span>' : `<div style="display:flex;gap:4px">
           <button class="btn btn-ghost btn-sm" onclick="openModal('modal-session')"><i class="ti ti-clock-play"></i>เซสชั่น</button>
-	    <button class="btn btn-ghost btn-sm" onclick="openRenew(${m.id})" title="ต่ออายุ"><i class="ti ti-refresh"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="openRenew(${m.id})" title="ต่ออายุ"><i class="ti ti-refresh"></i></button>
           <button class="btn btn-ghost btn-sm" onclick="editMember(${m.id})" title="แก้ไข"><i class="ti ti-edit"></i></button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete('member',${m.id},'${m.fname} ${m.lname}')" title="ลบ"><i class="ti ti-trash"></i></button>
         </div>`}</td>
       </tr>`;
-    }).join('');
-  }catch(e){toast(e.message,true);}
-}
+            }).join('');
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function submitMember(){
-  const fname=document.getElementById('m-fname').value.trim();const phone=document.getElementById('m-phone').value.trim();if(!fname||!phone){toast('กรุณากรอกชื่อและเบอร์โทร',true);return;}
-  try{await api('/api/members',{method:'POST',body:{fname,lname:document.getElementById('m-lname').value,phone,email:document.getElementById('m-email').value,trainer_id:document.getElementById('m-trainer').value||null,package_id:document.getElementById('m-pkg').value||null,start_date:document.getElementById('m-start').value,goal:document.getElementById('m-goal').value}});closeModal('modal-member');toast(`เพิ่มสมาชิก "${fname}" แล้ว`);loadMembers();populateSelects();['m-fname','m-lname','m-phone','m-email','m-goal'].forEach(id=>document.getElementById(id).value='');document.getElementById('m-pkg').value='';}catch(e){toast(e.message,true);}
-}
+    async function submitMember() {
+        const fname = document.getElementById('m-fname').value.trim(); const phone = document.getElementById('m-phone').value.trim(); if (!fname || !phone) { toast('กรุณากรอกชื่อและเบอร์โทร', true); return; }
+        try { await api('/api/members', { method: 'POST', body: { fname, lname: document.getElementById('m-lname').value, phone, email: document.getElementById('m-email').value, trainer_id: document.getElementById('m-trainer').value || null, package_id: document.getElementById('m-pkg').value || null, start_date: document.getElementById('m-start').value, goal: document.getElementById('m-goal').value } }); closeModal('modal-member'); toast(`เพิ่มสมาชิก "${fname}" แล้ว`); loadMembers(); populateSelects();['m-fname', 'm-lname', 'm-phone', 'm-email', 'm-goal'].forEach(id => document.getElementById(id).value = ''); document.getElementById('m-pkg').value = ''; } catch (e) { toast(e.message, true); }
+    }
 
-async function editMember(id){
-  try{
-    const rows=await api('/api/members');
-    const m=rows.find(x=>x.id===id);if(!m)return;
-    document.getElementById('em-id').value=m.id;
-    document.getElementById('em-fname').value=m.fname||'';
-    document.getElementById('em-lname').value=m.lname||'';
-    document.getElementById('em-phone').value=m.phone||'';
-    document.getElementById('em-email').value=m.email||'';
-    document.getElementById('em-goal').value=m.goal||'';
-    document.getElementById('em-start').value=(m.start_date||'').toString().slice(0,10);
-    const[trainers,packages]=await Promise.all([api('/api/trainers'),api('/api/packages')]);
-    document.getElementById('em-trainer').innerHTML='<option value="">— ไม่ระบุ —</option>'+trainers.map(t=>`<option value="${t.id}"${t.id==m.trainer_id?' selected':''}>${t.name}</option>`).join('');
-    document.getElementById('em-pkg').innerHTML='<option value="">— เลือกแพ็กเกจ —</option>'+packages.map(p=>`<option value="${p.id}"${p.id==m.package_id?' selected':''}>${p.name}</option>`).join('');
-    openModal('modal-edit-member');
-  }catch(e){toast(e.message,true);}
-}
+    async function editMember(id) {
+        try {
+            const rows = await api('/api/members');
+            const m = rows.find(x => x.id === id); if (!m) return;
+            document.getElementById('em-id').value = m.id;
+            document.getElementById('em-fname').value = m.fname || '';
+            document.getElementById('em-lname').value = m.lname || '';
+            document.getElementById('em-phone').value = m.phone || '';
+            document.getElementById('em-email').value = m.email || '';
+            document.getElementById('em-goal').value = m.goal || '';
+            document.getElementById('em-start').value = (m.start_date || '').toString().slice(0, 10);
+            const [trainers, packages] = await Promise.all([api('/api/trainers'), api('/api/packages')]);
+            document.getElementById('em-trainer').innerHTML = '<option value="">— ไม่ระบุ —</option>' + trainers.map(t => `<option value="${t.id}"${t.id == m.trainer_id ? ' selected' : ''}>${t.name}</option>`).join('');
+            document.getElementById('em-pkg').innerHTML = '<option value="">— เลือกแพ็กเกจ —</option>' + packages.map(p => `<option value="${p.id}"${p.id == m.package_id ? ' selected' : ''}>${p.name}</option>`).join('');
+            openModal('modal-edit-member');
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function updateMember(){
-  const id=document.getElementById('em-id').value;
-  const fname=document.getElementById('em-fname').value.trim();
-  const phone=document.getElementById('em-phone').value.trim();
-  if(!fname||!phone){toast('กรุณากรอกชื่อและเบอร์โทร',true);return;}
-  try{
-    await api('/api/members/'+id,{method:'PUT',body:{fname,lname:document.getElementById('em-lname').value,phone,email:document.getElementById('em-email').value,trainer_id:document.getElementById('em-trainer').value||null,package_id:document.getElementById('em-pkg').value||null,start_date:document.getElementById('em-start').value,goal:document.getElementById('em-goal').value}});
-    closeModal('modal-edit-member');toast('แก้ไขข้อมูลสมาชิกแล้ว');loadMembers();populateSelects();
-  }catch(e){toast(e.message,true);}
-}
-let _renewMembersCache=[];
+    async function updateMember() {
+        const id = document.getElementById('em-id').value;
+        const fname = document.getElementById('em-fname').value.trim();
+        const phone = document.getElementById('em-phone').value.trim();
+        if (!fname || !phone) { toast('กรุณากรอกชื่อและเบอร์โทร', true); return; }
+        try {
+            await api('/api/members/' + id, { method: 'PUT', body: { fname, lname: document.getElementById('em-lname').value, phone, email: document.getElementById('em-email').value, trainer_id: document.getElementById('em-trainer').value || null, package_id: document.getElementById('em-pkg').value || null, start_date: document.getElementById('em-start').value, goal: document.getElementById('em-goal').value } });
+            closeModal('modal-edit-member'); toast('แก้ไขข้อมูลสมาชิกแล้ว'); loadMembers(); populateSelects();
+        } catch (e) { toast(e.message, true); }
+    }
+    let _renewMembersCache = [];
 
-async function openRenew(id){
-  try{
-    const[members,packages]=await Promise.all([api('/api/members'),api('/api/packages')]);
-    _renewMembersCache=members;
-    const m=members.find(x=>x.id===id);if(!m)return;
+    async function openRenew(id) {
+        try {
+            const [members, packages] = await Promise.all([api('/api/members'), api('/api/packages')]);
+            _renewMembersCache = members;
+            const m = members.find(x => x.id === id); if (!m) return;
 
-    document.getElementById('rn-id').value=m.id;
-    const hu=m.hours_total!=null?(m.hours_total-(m.hours_used||0)):null;
-    document.getElementById('rn-current-info').innerHTML=`
+            document.getElementById('rn-id').value = m.id;
+            const hu = m.hours_total != null ? (m.hours_total - (m.hours_used || 0)) : null;
+            document.getElementById('rn-current-info').innerHTML = `
       <div style="font-weight:600;font-size:13.5px;margin-bottom:4px">${m.fname} ${m.lname}</div>
-      <div style="font-size:12.5px;color:var(--muted)">แพ็กเกจปัจจุบัน: ${m.pkg_name||'— ไม่มี —'}</div>
-      <div style="font-size:12.5px;color:var(--muted)">ชั่วโมงคงเหลือ: <b style="color:var(--text)">${hu!=null?hu.toFixed(1)+' ชม.':'—'}</b> ${m.expiry_date?'· หมดอายุ '+m.expiry_date:''}</div>`;
+      <div style="font-size:12.5px;color:var(--muted)">แพ็กเกจปัจจุบัน: ${m.pkg_name || '— ไม่มี —'}</div>
+      <div style="font-size:12.5px;color:var(--muted)">ชั่วโมงคงเหลือ: <b style="color:var(--text)">${hu != null ? hu.toFixed(1) + ' ชม.' : '—'}</b> ${m.expiry_date ? '· หมดอายุ ' + m.expiry_date : ''}</div>`;
 
-    document.getElementById('rn-pkg').innerHTML='<option value="">— เลือกแพ็กเกจ —</option>'+
-      packages.map(p=>`<option value="${p.id}">${p.name} — ฿${Number(p.price).toLocaleString()}</option>`).join('');
-    document.getElementById('rn-start').value=getLocalDate();
-    document.getElementById('rn-preview').style.display='none';
+            document.getElementById('rn-pkg').innerHTML = '<option value="">— เลือกแพ็กเกจ —</option>' +
+                packages.map(p => `<option value="${p.id}">${p.name} — ฿${Number(p.price).toLocaleString()}</option>`).join('');
+            document.getElementById('rn-start').value = getLocalDate();
+            document.getElementById('rn-preview').style.display = 'none';
 
-    openModal('modal-renew');
-  }catch(e){toast(e.message,true);}
-}
+            openModal('modal-renew');
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function previewRenew(){
-  const id=Number(document.getElementById('rn-id').value);
-  const pkgId=document.getElementById('rn-pkg').value;
-  const previewEl=document.getElementById('rn-preview');
-  if(!pkgId){previewEl.style.display='none';return;}
-  try{
-    const packages=await api('/api/packages');
-    const pkg=packages.find(p=>p.id==pkgId);
-    const m=_renewMembersCache.find(x=>x.id===id);
-    if(!pkg||!m)return;
-    const carry=m.hours_total!=null?Math.max(0,m.hours_total-(m.hours_used||0)):0;
-    const newTotal=pkg.hours!=null?Number(pkg.hours)+carry:null;
-    document.getElementById('rn-preview-text').innerHTML=newTotal!=null
-      ?`ชั่วโมงเดิม ${carry.toFixed(1)} ชม. + แพ็กเกจใหม่ ${pkg.hours} ชม. = รวม <b>${newTotal.toFixed(1)} ชม.</b>`
-      :`แพ็กเกจนี้ไม่มีชั่วโมง (รายเดือน/ไม่จำกัด)`;
-    previewEl.style.display='flex';
-  }catch(e){}
-}
+    async function previewRenew() {
+        const id = Number(document.getElementById('rn-id').value);
+        const pkgId = document.getElementById('rn-pkg').value;
+        const previewEl = document.getElementById('rn-preview');
+        if (!pkgId) { previewEl.style.display = 'none'; return; }
+        try {
+            const packages = await api('/api/packages');
+            const pkg = packages.find(p => p.id == pkgId);
+            const m = _renewMembersCache.find(x => x.id === id);
+            if (!pkg || !m) return;
+            const carry = m.hours_total != null ? Math.max(0, m.hours_total - (m.hours_used || 0)) : 0;
+            const newTotal = pkg.hours != null ? Number(pkg.hours) + carry : null;
+            document.getElementById('rn-preview-text').innerHTML = newTotal != null
+                ? `ชั่วโมงเดิม ${carry.toFixed(1)} ชม. + แพ็กเกจใหม่ ${pkg.hours} ชม. = รวม <b>${newTotal.toFixed(1)} ชม.</b>`
+                : `แพ็กเกจนี้ไม่มีชั่วโมง (รายเดือน/ไม่จำกัด)`;
+            previewEl.style.display = 'flex';
+        } catch (e) { }
+    }
 
-async function submitRenew(){
-  const id=document.getElementById('rn-id').value;
-  const package_id=document.getElementById('rn-pkg').value;
-  const start_date=document.getElementById('rn-start').value;
-  if(!package_id||!start_date){toast('กรุณาเลือกแพ็กเกจและวันเริ่ม',true);return;}
-  try{
-    const r=await api('/api/members/'+id+'/renew',{method:'POST',body:{package_id,start_date}});
-    closeModal('modal-renew');
-    toast('ต่ออายุแพ็กเกจสำเร็จ'+(r.carry_hours>0?` (สะสม ${r.carry_hours.toFixed(1)} ชม.)`:''));
-    loadMembers();populateSelects();
-  }catch(e){toast(e.message,true);}
-}
+    async function submitRenew() {
+        const id = document.getElementById('rn-id').value;
+        const package_id = document.getElementById('rn-pkg').value;
+        const start_date = document.getElementById('rn-start').value;
+        if (!package_id || !start_date) { toast('กรุณาเลือกแพ็กเกจและวันเริ่ม', true); return; }
+        try {
+            const r = await api('/api/members/' + id + '/renew', { method: 'POST', body: { package_id, start_date } });
+            closeModal('modal-renew');
+            toast('ต่ออายุแพ็กเกจสำเร็จ' + (r.carry_hours > 0 ? ` (สะสม ${r.carry_hours.toFixed(1)} ชม.)` : ''));
+            loadMembers(); populateSelects();
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function loadPackages(){
-  try{
-    const pkgs=await api('/api/packages');
-    const colors={PT_hours:'var(--orange)',monthly:'var(--blue)',class_sessions:'var(--green)',bundle:'var(--purple)'};
-    document.getElementById('pkg-grid').innerHTML=pkgs.map(p=>`
-      <div class="card" style="border-top:3px solid ${colors[p.type]||'var(--orange)'}">
+    async function loadPackages() {
+        try {
+            const pkgs = await api('/api/packages');
+            const colors = { PT_hours: 'var(--orange)', monthly: 'var(--blue)', class_sessions: 'var(--green)', bundle: 'var(--purple)' };
+            document.getElementById('pkg-grid').innerHTML = pkgs.map(p => `
+      <div class="card" style="border-top:3px solid ${colors[p.type] || 'var(--orange)'}">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">${p.name}</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:12px">${p.description||''}</div>
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:${colors[p.type]||'var(--orange)'}">฿${Number(p.price).toLocaleString()}</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">หมดอายุ ${p.validity_days} วัน${p.hours?` · ${p.hours} ชม.`:''}${p.sessions?` · ${p.sessions} ครั้ง`:''}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px">${p.description || ''}</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:${colors[p.type] || 'var(--orange)'}">฿${Number(p.price).toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">หมดอายุ ${p.validity_days} วัน${p.hours ? ` · ${p.hours} ชม.` : ''}${p.sessions ? ` · ${p.sessions} ครั้ง` : ''}</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">ใช้งาน <b style="color:var(--text)">${p.member_count}</b> สมาชิก</div>
-        ${isStaffRestricted?'':`<div style="display:flex;gap:6px">
+        ${isStaffRestricted ? '' : `<div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editPackage(${p.id})"><i class="ti ti-edit"></i>แก้ไข</button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete('package',${p.id},'${p.name}')"><i class="ti ti-trash"></i></button>
         </div>`}
-      </div>`).join('')+(isStaffRestricted?'':`<div class="card" style="border:2px dashed var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;min-height:160px" onclick="openModal('modal-package')"><i class="ti ti-plus" style="font-size:24px;color:var(--faint)"></i><span style="font-size:13px;color:var(--muted)">เพิ่มแพ็กเกจใหม่</span></div>`);
-  }catch(e){toast(e.message,true);}
-}
-
-async function submitPackage(){
-  const name=document.getElementById('np-name').value.trim();const price=document.getElementById('np-price').value;if(!name||!price){toast('กรุณากรอกชื่อและราคา',true);return;}
-  try{await api('/api/packages',{method:'POST',body:{name,type:document.getElementById('np-type').value,price,hours:document.getElementById('np-qty').value||null,sessions:document.getElementById('np-qty').value||null,validity_days:document.getElementById('np-validity').value||30,description:document.getElementById('np-desc').value}});closeModal('modal-package');toast('เพิ่มแพ็กเกจแล้ว');loadPackages();populateSelects();}catch(e){toast(e.message,true);}
-}
-
-async function editPackage(id){
-  try{
-    const pkgs=await api('/api/packages');
-    const p=pkgs.find(x=>x.id===id);if(!p)return;
-    document.getElementById('ep-id').value=p.id;
-    document.getElementById('ep-name').value=p.name||'';
-    document.getElementById('ep-price').value=p.price||'';
-    document.getElementById('ep-type').value=p.type||'PT_hours';
-    document.getElementById('ep-qty').value=p.hours||p.sessions||'';
-    document.getElementById('ep-validity').value=p.validity_days||'';
-    document.getElementById('ep-desc').value=p.description||'';
-    openModal('modal-edit-package');
-  }catch(e){toast(e.message,true);}
-}
-
-async function updatePackage(){
-  const id=document.getElementById('ep-id').value;
-  const name=document.getElementById('ep-name').value.trim();
-  const price=document.getElementById('ep-price').value;
-  if(!name||!price){toast('กรุณากรอกชื่อและราคา',true);return;}
-  try{
-    await api('/api/packages/'+id,{method:'PUT',body:{name,type:document.getElementById('ep-type').value,price,hours:document.getElementById('ep-qty').value||null,sessions:document.getElementById('ep-qty').value||null,validity_days:document.getElementById('ep-validity').value||30,description:document.getElementById('ep-desc').value}});
-    closeModal('modal-edit-package');toast('แก้ไขแพ็กเกจแล้ว');loadPackages();populateSelects();
-  }catch(e){toast(e.message,true);}
-}
-
-function confirmDelete(type,id,name){
-  document.getElementById('confirm-delete-msg').textContent=`ต้องการลบ "${name}" ใช่หรือไม่? ข้อมูลจะหายถาวร`;
-  document.getElementById('confirm-delete-btn').onclick=()=>doDelete(type,id);
-  openModal('modal-confirm-delete');
-}
-
-async function doDelete(type,id){
-  try{
-    await api(`/api/${type==='member'?'members':'packages'}/${id}`,{method:'DELETE'});
-    closeModal('modal-confirm-delete');toast('ลบข้อมูลแล้ว');
-    if(type==='member'){loadMembers();populateSelects();}
-    else{loadPackages();populateSelects();}
-  }catch(e){toast(e.message,true);}
-}
-
-let _histRows=[];
-function filterHistory(){
-  const q=(document.getElementById('hist-search-name').value||'').trim().toLowerCase();
-  const d=(document.getElementById('hist-search-date').value||'').trim();
-  const hsb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
-  const filtered=_histRows.filter(s=>{
-    const name=(s.fname+' '+s.lname).toLowerCase();
-    const dateMatch=!d||(s.session_date||'').toString().slice(0,10)===d;
-    const nameMatch=!q||name.includes(q);
-    return dateMatch&&nameMatch;
-  });
-  document.getElementById('hist-count').textContent=filtered.length+' รายการ';
-  document.getElementById('hist-body').innerHTML=filtered.length?filtered.map(s=>`<tr><td style="font-size:13px">${(s.session_date||'').toString().slice(0,10)}</td><td style="font-size:13px;font-weight:600">${String(s.session_time||'').slice(0,5)||'—'}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used}</td><td><span class="badge ${hsb(s.status)}</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ไม่พบรายการที่ค้นหา</td></tr>';
-}
-async function loadSessionHistory(){
-  try{
-    const rows=await api('/api/sessions');
-    _histRows=rows.sort((a,b)=>((b.session_date||'')+String(b.session_time||'')).localeCompare((a.session_date||'')+String(a.session_time||'')));
-      filterHistory();
-
-    if(!charts.sessionHistChart){
-      const labels=[],vals=[];for(let i=6;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);labels.push(DAYS_TH[dt.getDay()===0?6:dt.getDay()-1]);const iso=getLocalDate(dt);vals.push(rows.filter(r=>(r.session_date||'').toString().slice(0,10)===iso).length);}
-      charts.sessionHistChart=new Chart(document.getElementById('sessionHistChart'),{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:'rgba(232,93,38,.6)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},stepSize:1}}}}});
+      </div>`).join('') + (isStaffRestricted ? '' : `<div class="card" style="border:2px dashed var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;cursor:pointer;min-height:160px" onclick="openModal('modal-package')"><i class="ti ti-plus" style="font-size:24px;color:var(--faint)"></i><span style="font-size:13px;color:var(--muted)">เพิ่มแพ็กเกจใหม่</span></div>`);
+        } catch (e) { toast(e.message, true); }
     }
-  }catch(e){toast(e.message,true);}
-}
 
-async function loadSessions(){
-  try{
-    const today=getLocalDate();const rows=await api('/api/sessions?date='+today);
-    const sb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
-    document.getElementById('sessions-body').innerHTML=rows.length?rows.map(s=>`
+    async function submitPackage() {
+        const name = document.getElementById('np-name').value.trim(); const price = document.getElementById('np-price').value; if (!name || !price) { toast('กรุณากรอกชื่อและราคา', true); return; }
+        try { await api('/api/packages', { method: 'POST', body: { name, type: document.getElementById('np-type').value, price, hours: document.getElementById('np-qty').value || null, sessions: document.getElementById('np-qty').value || null, validity_days: document.getElementById('np-validity').value || 30, description: document.getElementById('np-desc').value } }); closeModal('modal-package'); toast('เพิ่มแพ็กเกจแล้ว'); loadPackages(); populateSelects(); } catch (e) { toast(e.message, true); }
+    }
+
+    async function editPackage(id) {
+        try {
+            const pkgs = await api('/api/packages');
+            const p = pkgs.find(x => x.id === id); if (!p) return;
+            document.getElementById('ep-id').value = p.id;
+            document.getElementById('ep-name').value = p.name || '';
+            document.getElementById('ep-price').value = p.price || '';
+            document.getElementById('ep-type').value = p.type || 'PT_hours';
+            document.getElementById('ep-qty').value = p.hours || p.sessions || '';
+            document.getElementById('ep-validity').value = p.validity_days || '';
+            document.getElementById('ep-desc').value = p.description || '';
+            openModal('modal-edit-package');
+        } catch (e) { toast(e.message, true); }
+    }
+
+    async function updatePackage() {
+        const id = document.getElementById('ep-id').value;
+        const name = document.getElementById('ep-name').value.trim();
+        const price = document.getElementById('ep-price').value;
+        if (!name || !price) { toast('กรุณากรอกชื่อและราคา', true); return; }
+        try {
+            await api('/api/packages/' + id, { method: 'PUT', body: { name, type: document.getElementById('ep-type').value, price, hours: document.getElementById('ep-qty').value || null, sessions: document.getElementById('ep-qty').value || null, validity_days: document.getElementById('ep-validity').value || 30, description: document.getElementById('ep-desc').value } });
+            closeModal('modal-edit-package'); toast('แก้ไขแพ็กเกจแล้ว'); loadPackages(); populateSelects();
+        } catch (e) { toast(e.message, true); }
+    }
+
+    function confirmDelete(type, id, name) {
+        document.getElementById('confirm-delete-msg').textContent = `ต้องการลบ "${name}" ใช่หรือไม่? ข้อมูลจะหายถาวร`;
+        document.getElementById('confirm-delete-btn').onclick = () => doDelete(type, id);
+        openModal('modal-confirm-delete');
+    }
+
+    async function doDelete(type, id) {
+        try {
+            await api(`/api/${type === 'member' ? 'members' : 'packages'}/${id}`, { method: 'DELETE' });
+            closeModal('modal-confirm-delete'); toast('ลบข้อมูลแล้ว');
+            if (type === 'member') { loadMembers(); populateSelects(); }
+            else { loadPackages(); populateSelects(); }
+        } catch (e) { toast(e.message, true); }
+    }
+
+    let _histRows = [];
+    function filterHistory() {
+        const q = (document.getElementById('hist-search-name').value || '').trim().toLowerCase();
+        const d = (document.getElementById('hist-search-date').value || '').trim();
+        const hsb = s => s === 'done' ? 'badge-green">เสร็จแล้ว' : s === 'active' ? 'badge-orange">กำลังเทรน' : s === 'cancelled' ? 'badge-red">ยกเลิก' : 'badge-blue">นัดไว้';
+        const filtered = _histRows.filter(s => {
+            const name = (s.fname + ' ' + s.lname).toLowerCase();
+            const dateMatch = !d || (s.session_date || '').toString().slice(0, 10) === d;
+            const nameMatch = !q || name.includes(q);
+            return dateMatch && nameMatch;
+        });
+        document.getElementById('hist-count').textContent = filtered.length + ' รายการ';
+        document.getElementById('hist-body').innerHTML = filtered.length ? filtered.map(s => `<tr><td style="font-size:13px">${(s.session_date || '').toString().slice(0, 10)}</td><td style="font-size:13px;font-weight:600">${String(s.session_time || '').slice(0, 5) || '—'}</td><td><div class="av-row"><div class="av av-orange">${s.fname[0]}</div><div><div class="av-name">${s.fname} ${s.lname}</div></div></div></td><td>${s.type}</td><td>${s.trainer_name || '—'}</td><td>${s.hours_used}</td><td><span class="badge ${hsb(s.status)}</span></td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ไม่พบรายการที่ค้นหา</td></tr>';
+    }
+    async function loadSessionHistory() {
+        try {
+            const rows = await api('/api/sessions');
+            _histRows = rows.sort((a, b) => ((b.session_date || '') + String(b.session_time || '')).localeCompare((a.session_date || '') + String(a.session_time || '')));
+            filterHistory();
+
+            if (!charts.sessionHistChart) {
+                const labels = [], vals = []; for (let i = 6; i >= 0; i--) { const dt = new Date(); dt.setDate(dt.getDate() - i); labels.push(DAYS_TH[dt.getDay() === 0 ? 6 : dt.getDay() - 1]); const iso = getLocalDate(dt); vals.push(rows.filter(r => (r.session_date || '').toString().slice(0, 10) === iso).length); }
+                charts.sessionHistChart = new Chart(document.getElementById('sessionHistChart'), { type: 'bar', data: { labels, datasets: [{ data: vals, backgroundColor: 'rgba(232,93,38,.6)', borderRadius: 5, borderSkipped: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#7a7a72', font: { size: 11 } } }, y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { color: '#7a7a72', font: { size: 11 }, stepSize: 1 } } } } });
+            }
+        } catch (e) { toast(e.message, true); }
+    }
+
+    async function loadSessions() {
+        try {
+            const today = getLocalDate(); const rows = await api('/api/sessions?date=' + today);
+            const sb = s => s === 'done' ? 'badge-green">เสร็จแล้ว' : s === 'active' ? 'badge-orange">กำลังเทรน' : s === 'cancelled' ? 'badge-red">ยกเลิก' : 'badge-blue">นัดไว้';
+            document.getElementById('sessions-body').innerHTML = rows.length ? rows.map(s => `
       <tr>
-        <td style="font-weight:600">${String(s.session_time||'').slice(0,5)}</td>
-        <td><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic||''}</div></td>
+        <td style="font-weight:600">${String(s.session_time || '').slice(0, 5)}</td>
+        <td><div style="font-weight:500">${s.fname} ${s.lname}</div><div style="font-size:11px;color:var(--muted)">${s.topic || ''}</div></td>
         <td>${s.type}</td>
-        <td>${s.trainer_name||'—'}</td>
+        <td>${s.trainer_name || '—'}</td>
         <td>${s.hours_used} ชม.</td>
         <td>
-          ${isStaffRestricted?`<span class="badge ${sb(s.status)}</span>`:`<select class="fselect" style="padding:4px 8px; font-size:12.5px; width:auto; cursor:pointer;" onchange="updateSessionStatus(${s.id}, this.value)">
-            <option value="upcoming" ${s.status==='upcoming'?'selected':''}>นัดไว้</option>
-            <option value="active" ${s.status==='active'?'selected':''}>กำลังเทรน</option>
-            <option value="done" ${s.status==='done'?'selected':''}>เสร็จแล้ว</option>
-            <option value="cancelled" ${s.status==='cancelled'?'selected':''}>ยกเลิก</option>
+          ${isStaffRestricted ? `<span class="badge ${sb(s.status)}</span>` : `<select class="fselect" style="padding:4px 8px; font-size:12.5px; width:auto; cursor:pointer;" onchange="updateSessionStatus(${s.id}, this.value)">
+            <option value="upcoming" ${s.status === 'upcoming' ? 'selected' : ''}>นัดไว้</option>
+            <option value="active" ${s.status === 'active' ? 'selected' : ''}>กำลังเทรน</option>
+            <option value="done" ${s.status === 'done' ? 'selected' : ''}>เสร็จแล้ว</option>
+            <option value="cancelled" ${s.status === 'cancelled' ? 'selected' : ''}>ยกเลิก</option>
           </select>`}
         </td>
         <td></td>
-      </tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
-  }catch(e){toast(e.message,true);}
-}
+      </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">ยังไม่มีเซสชั่นวันนี้</td></tr>';
+        } catch (e) { toast(e.message, true); }
+    }
 
-// ฟังก์ชันใหม่สำหรับจับ Event ตอนเลือก Dropdown
-async function updateSessionStatus(id, status){
-  try{
-    await api('/api/sessions/'+id+'/status', { method:'PATCH', body: { status } });
-    toast('อัปเดตสถานะเรียบร้อย');
-    loadSessions();
-    if(typeof loadDashboard === 'function') loadDashboard(); // ดึงข้อมูลหน้าภาพรวมใหม่เผื่อมีการคืน/หักชั่วโมง
-  }catch(e){
-    toast(e.message,true);
-    loadSessions(); // โหลดเซสชั่นใหม่เพื่อคืนค่า Dropdown หากเกิด Error
-  }
-}
+    // ฟังก์ชันใหม่สำหรับจับ Event ตอนเลือก Dropdown
+    async function updateSessionStatus(id, status) {
+        try {
+            await api('/api/sessions/' + id + '/status', { method: 'PATCH', body: { status } });
+            toast('อัปเดตสถานะเรียบร้อย');
+            loadSessions();
+            if (typeof loadDashboard === 'function') loadDashboard(); // ดึงข้อมูลหน้าภาพรวมใหม่เผื่อมีการคืน/หักชั่วโมง
+        } catch (e) {
+            toast(e.message, true);
+            loadSessions(); // โหลดเซสชั่นใหม่เพื่อคืนค่า Dropdown หากเกิด Error
+        }
+    }
 
-async function submitSession(){
-  const member_id=document.getElementById('s-member').value;const time=document.getElementById('s-time').value;const date=document.getElementById('s-date').value;if(!member_id||!time||!date){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
-  try{
-    // 1. สร้าง Session
-    await api('/api/sessions',{method:'POST',body:{member_id,trainer_id:document.getElementById('s-trainer').value||null,type:document.getElementById('s-type').value,topic:document.getElementById('s-topic').value,session_date:date,session_time:time,hours_used:document.getElementById('s-hours').value||1.0}});
+    async function submitSession() {
+        const member_id = document.getElementById('s-member').value; const time = document.getElementById('s-time').value; const date = document.getElementById('s-date').value; if (!member_id || !time || !date) { toast('กรุณากรอกข้อมูลให้ครบ', true); return; }
+        try {
+            // 1. สร้าง Session
+            await api('/api/sessions', { method: 'POST', body: { member_id, trainer_id: document.getElementById('s-trainer').value || null, type: document.getElementById('s-type').value, topic: document.getElementById('s-topic').value, session_date: date, session_time: time, hours_used: document.getElementById('s-hours').value || 1.0 } });
 
-    // 2. สร้าง Booking อัตโนมัติจาก Session (sync ตารางนัด)
-    try{
-      await api('/api/bookings',{method:'POST',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('s-trainer').value||null,type:document.getElementById('s-type').value}});
-    }catch(e){console.warn('booking sync skip:',e.message);}
+            // 2. สร้าง Booking อัตโนมัติจาก Session (sync ตารางนัด)
+            try {
+                await api('/api/bookings', { method: 'POST', body: { member_id, booking_date: date, booking_time: time, trainer_id: document.getElementById('s-trainer').value || null, type: document.getElementById('s-type').value } });
+            } catch (e) { console.warn('booking sync skip:', e.message); }
 
-    closeModal('modal-session');
-    toast('บันทึกเซสชั่นและอัพเดตตารางนัดแล้ว ✅');
-    loadSessions();
+            closeModal('modal-session');
+            toast('บันทึกเซสชั่นและอัพเดตตารางนัดแล้ว ✅');
+            loadSessions();
 
-    // 3. ถ้าปฏิทินอยู่ในเดือนเดียวกับวันที่ session → refresh ตารางนัดด้วย
-    const sDate=new Date(date);
-    if(sDate.getFullYear()===calYear&&sDate.getMonth()+1===calMonth){loadBookings();}
+            // 3. ถ้าปฏิทินอยู่ในเดือนเดียวกับวันที่ session → refresh ตารางนัดด้วย
+            const sDate = new Date(date);
+            if (sDate.getFullYear() === calYear && sDate.getMonth() + 1 === calMonth) { loadBookings(); }
 
-  }catch(e){toast(e.message,true);}
-}
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function loadBookings(){
-  try{const rows=await api(`/api/bookings?month=${calMonth}&year=${calYear}`);buildCalendar(rows);}catch(e){toast(e.message,true);}
-}
+    async function loadBookings() {
+        try { const rows = await api(`/api/bookings?month=${calMonth}&year=${calYear}`); buildCalendar(rows); } catch (e) { toast(e.message, true); }
+    }
 
-const thaiMonths=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-function updateCalLabel(){document.getElementById('cal-month-label').textContent=thaiMonths[calMonth]+' '+(calYear+543);}
-function changeMonth(d){calMonth+=d;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}updateCalLabel();loadBookings();}
+    const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    function updateCalLabel() { document.getElementById('cal-month-label').textContent = thaiMonths[calMonth] + ' ' + (calYear + 543); }
+    function changeMonth(d) { calMonth += d; if (calMonth > 12) { calMonth = 1; calYear++; } if (calMonth < 1) { calMonth = 12; calYear--; } updateCalLabel(); loadBookings(); }
 
-function buildCalendar(bookings){
-  const grid=document.getElementById('cal-grid');
-  const firstDay=new Date(calYear,calMonth-1,1);const lastDay=new Date(calYear,calMonth,0);
-  const startDow=firstDay.getDay()===0?6:firstDay.getDay()-1;const cells=[];
-  for(let i=0;i<startDow;i++){const d=new Date(calYear,calMonth-1,-startDow+i+1);cells.push({day:d.getDate(),other:true,iso:getLocalDate(d)});}
-  for(let d=1;d<=lastDay.getDate();d++){const dt=new Date(calYear,calMonth-1,d);cells.push({day:d,other:false,iso:getLocalDate(dt)});}
-  while(cells.length%7!==0){const e=cells.length-lastDay.getDate()-startDow+1;const dt=new Date(calYear,calMonth,e);cells.push({day:dt.getDate(),other:true,iso:getLocalDate(dt)});}
-  const dc=['#e85d26','#2563b0','#2a7d4f','#b86e00','#6d3fa0'];const todayIso=getLocalDate();
-  grid.innerHTML=cells.map(c=>{
-    const isT=c.iso===todayIso;
-    const evts=bookings.filter(b=>(b.booking_date||'').toString().slice(0,10)===c.iso);
-    const dots=evts.map((e,j)=>{
-      const cancelled=e.status==='cancelled';
-      return`<div class="cal-dot${cancelled?' cancelled':''}" style="background:${cancelled?'var(--surface3)':dc[j%dc.length]+'22'};color:${cancelled?'var(--muted)':dc[j%dc.length]}">
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${String(e.booking_time||'').slice(0,5)} ${e.fname}</span>
+    function buildCalendar(bookings) {
+        const grid = document.getElementById('cal-grid');
+        const firstDay = new Date(calYear, calMonth - 1, 1); const lastDay = new Date(calYear, calMonth, 0);
+        const startDow = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; const cells = [];
+        for (let i = 0; i < startDow; i++) { const d = new Date(calYear, calMonth - 1, -startDow + i + 1); cells.push({ day: d.getDate(), other: true, iso: getLocalDate(d) }); }
+        for (let d = 1; d <= lastDay.getDate(); d++) { const dt = new Date(calYear, calMonth - 1, d); cells.push({ day: d, other: false, iso: getLocalDate(dt) }); }
+        while (cells.length % 7 !== 0) { const e = cells.length - lastDay.getDate() - startDow + 1; const dt = new Date(calYear, calMonth, e); cells.push({ day: dt.getDate(), other: true, iso: getLocalDate(dt) }); }
+        const dc = ['#e85d26', '#2563b0', '#2a7d4f', '#b86e00', '#6d3fa0']; const todayIso = getLocalDate();
+        grid.innerHTML = cells.map(c => {
+            const isT = c.iso === todayIso;
+            const evts = bookings.filter(b => (b.booking_date || '').toString().slice(0, 10) === c.iso);
+            const dots = evts.map((e, j) => {
+                const cancelled = e.status === 'cancelled';
+                return `<div class="cal-dot${cancelled ? ' cancelled' : ''}" style="background:${cancelled ? 'var(--surface3)' : dc[j % dc.length] + '22'};color:${cancelled ? 'var(--muted)' : dc[j % dc.length]}">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${String(e.booking_time || '').slice(0, 5)} ${e.fname}</span>
         ${!cancelled
-          ?`<span class="cal-dot-actions">
+                        ? `<span class="cal-dot-actions">
               <button class="cal-dot-btn" onclick="editBooking(${e.id})" title="แก้ไข"><i class="ti ti-edit" style="font-size:9px"></i></button>
               <button class="cal-dot-btn" onclick="cancelBooking(${e.id})" title="ยกเลิก"><i class="ti ti-x" style="font-size:9px"></i></button>
             </span>`
-          :`<span style="font-size:9px;flex-shrink:0">(ยกเลิก)</span>`
-        }
+                        : `<span style="font-size:9px;flex-shrink:0">(ยกเลิก)</span>`
+                    }
       </div>`;
-    }).join('');
-    return`<div class="cal-cell${isT?' today':''}${c.other?' other-month':''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;
-  }).join('');
-}
+            }).join('');
+            return `<div class="cal-cell${isT ? ' today' : ''}${c.other ? ' other-month' : ''}"><div class="cal-day-num">${c.day}</div>${dots}</div>`;
+        }).join('');
+    }
 
-async function submitBooking(){
-  const member_id=document.getElementById('b-member').value;
-  const date=document.getElementById('b-date').value;
-  const time=document.getElementById('b-time').value;
-  if(!member_id||!date||!time){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
-  try{
-    // 1. สร้าง Booking
-    await api('/api/bookings',{method:'POST',body:{
-      member_id, booking_date:date, booking_time:time,
-      trainer_id:document.getElementById('b-trainer').value||null,
-      type:document.getElementById('b-type').value
-    }});
+    async function submitBooking() {
+        const member_id = document.getElementById('b-member').value;
+        const date = document.getElementById('b-date').value;
+        const time = document.getElementById('b-time').value;
+        if (!member_id || !date || !time) { toast('กรุณากรอกข้อมูลให้ครบ', true); return; }
+        try {
+            // 1. สร้าง Booking
+            await api('/api/bookings', {
+                method: 'POST', body: {
+                    member_id, booking_date: date, booking_time: time,
+                    trainer_id: document.getElementById('b-trainer').value || null,
+                    type: document.getElementById('b-type').value
+                }
+            });
 
-    // 2. สร้าง Session อัตโนมัติจาก Booking
-    await api('/api/sessions',{method:'POST',body:{
-      member_id,
-      session_date: date,
-      session_time: time,
-      trainer_id: document.getElementById('b-trainer').value||null,
-      type: document.getElementById('b-type').value,
-      hours_used: 1.0,
-      topic: ''
-    }});
+            // 2. สร้าง Session อัตโนมัติจาก Booking
+            await api('/api/sessions', {
+                method: 'POST', body: {
+                    member_id,
+                    session_date: date,
+                    session_time: time,
+                    trainer_id: document.getElementById('b-trainer').value || null,
+                    type: document.getElementById('b-type').value,
+                    hours_used: 1.0,
+                    topic: ''
+                }
+            });
 
-    closeModal('modal-booking');
-    toast('จองนัดและสร้างเซสชั่นแล้ว ✅');
+            closeModal('modal-booking');
+            toast('จองนัดและสร้างเซสชั่นแล้ว ✅');
 
-    // 3. Auto ไปหน้า Sessions
-    const sessionBtn=document.querySelector('.nav-btn[onclick*="sessions"]');
-    if(sessionBtn) nav('sessions', sessionBtn);
+            // 3. Auto ไปหน้า Sessions
+            const sessionBtn = document.querySelector('.nav-btn[onclick*="sessions"]');
+            if (sessionBtn) nav('sessions', sessionBtn);
 
-  }catch(e){toast(e.message,true);}
-}
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function editBooking(id){
-  try{
-    const rows=await api(`/api/bookings?month=${calMonth}&year=${calYear}`);
-    const b=rows.find(x=>x.id===id);if(!b)return;
-    document.getElementById('eb-id').value=b.id;
-    document.getElementById('eb-date').value=(b.booking_date||'').toString().slice(0,10);
-    document.getElementById('eb-time').value=(b.booking_time||'').toString().slice(0,5);
-    document.getElementById('eb-type').value=b.type||'PT';
-    const[members,trainers]=await Promise.all([api('/api/members'),api('/api/trainers')]);
-    document.getElementById('eb-member').innerHTML='<option value="">— เลือกสมาชิก —</option>'+
-      members.map(m=>`<option value="${m.id}"${m.id==b.member_id?' selected':''}>${m.fname} ${m.lname}</option>`).join('');
-    document.getElementById('eb-trainer').innerHTML='<option value="">— ไม่ระบุ —</option>'+
-      trainers.map(t=>`<option value="${t.id}"${t.id==b.trainer_id?' selected':''}>${t.name}</option>`).join('');
-    openModal('modal-edit-booking');
-  }catch(e){toast(e.message,true);}
-}
+    async function editBooking(id) {
+        try {
+            const rows = await api(`/api/bookings?month=${calMonth}&year=${calYear}`);
+            const b = rows.find(x => x.id === id); if (!b) return;
+            document.getElementById('eb-id').value = b.id;
+            document.getElementById('eb-date').value = (b.booking_date || '').toString().slice(0, 10);
+            document.getElementById('eb-time').value = (b.booking_time || '').toString().slice(0, 5);
+            document.getElementById('eb-type').value = b.type || 'PT';
+            const [members, trainers] = await Promise.all([api('/api/members'), api('/api/trainers')]);
+            document.getElementById('eb-member').innerHTML = '<option value="">— เลือกสมาชิก —</option>' +
+                members.map(m => `<option value="${m.id}"${m.id == b.member_id ? ' selected' : ''}>${m.fname} ${m.lname}</option>`).join('');
+            document.getElementById('eb-trainer').innerHTML = '<option value="">— ไม่ระบุ —</option>' +
+                trainers.map(t => `<option value="${t.id}"${t.id == b.trainer_id ? ' selected' : ''}>${t.name}</option>`).join('');
+            openModal('modal-edit-booking');
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function updateBooking(){
-  const id=document.getElementById('eb-id').value;
-  const member_id=document.getElementById('eb-member').value;
-  const date=document.getElementById('eb-date').value;
-  const time=document.getElementById('eb-time').value;
-  if(!member_id||!date||!time){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
-  try{
-    await api('/api/bookings/'+id,{method:'PUT',body:{member_id,booking_date:date,booking_time:time,trainer_id:document.getElementById('eb-trainer').value||null,type:document.getElementById('eb-type').value}});
-    closeModal('modal-edit-booking');toast('แก้ไขการจองแล้ว');loadBookings();
-  }catch(e){toast(e.message,true);}
-}
+    async function updateBooking() {
+        const id = document.getElementById('eb-id').value;
+        const member_id = document.getElementById('eb-member').value;
+        const date = document.getElementById('eb-date').value;
+        const time = document.getElementById('eb-time').value;
+        if (!member_id || !date || !time) { toast('กรุณากรอกข้อมูลให้ครบ', true); return; }
+        try {
+            await api('/api/bookings/' + id, { method: 'PUT', body: { member_id, booking_date: date, booking_time: time, trainer_id: document.getElementById('eb-trainer').value || null, type: document.getElementById('eb-type').value } });
+            closeModal('modal-edit-booking'); toast('แก้ไขการจองแล้ว'); loadBookings();
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function cancelBooking(id){
-  if(!confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?'))return;
-  try{
-    await api('/api/bookings/'+id,{method:'DELETE'});
-    toast('ยกเลิกการจองแล้ว');loadBookings();
-  }catch(e){toast(e.message,true);}
-}
+    async function cancelBooking(id) {
+        if (!confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?')) return;
+        try {
+            await api('/api/bookings/' + id, { method: 'DELETE' });
+            toast('ยกเลิกการจองแล้ว'); loadBookings();
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function loadPayments(){
-  try{
-    const d=await api('/api/payments');
-    const b=amountsHidden?'blurred':'';
-    document.getElementById('pay-kpis').innerHTML=`
+    async function loadPayments() {
+        try {
+            const d = await api('/api/payments');
+            const b = amountsHidden ? 'blurred' : '';
+            document.getElementById('pay-kpis').innerHTML = `
       <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">รายรับเดือนนี้</div><div class="kpi-val pay-amount ${b}">${Number(d.month_total).toLocaleString()} <span class="kpi-unit">฿</span></div><div class="kpi-sub pay-amount ${b}">${d.rows.length} รายการ</div></div>
       <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">รอชำระ</div><div class="kpi-val pay-amount ${b}">${Number(d.pending_total).toLocaleString()} <span class="kpi-unit">฿</span></div></div>
-      <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">รายรับเฉลี่ย/วัน</div><div class="kpi-val pay-amount ${b}">${Math.round(d.month_total/new Date().getDate()).toLocaleString()} <span class="kpi-unit">฿</span></div></div>`;
-    const ml={transfer:'โอน',cash:'เงินสด',credit_card:'บัตรเครดิต',qr:'QR'};
-    document.getElementById('pay-list').innerHTML=d.rows.slice(0,8).map(p=>`
+      <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">รายรับเฉลี่ย/วัน</div><div class="kpi-val pay-amount ${b}">${Math.round(d.month_total / new Date().getDate()).toLocaleString()} <span class="kpi-unit">฿</span></div></div>`;
+            const ml = { transfer: 'โอน', cash: 'เงินสด', credit_card: 'บัตรเครดิต', qr: 'QR' };
+            document.getElementById('pay-list').innerHTML = d.rows.slice(0, 8).map(p => `
       <div class="session-row">
-        <div style="flex:1"><div class="session-name">${p.fname} ${p.lname}${p.pkg_name?' — '+p.pkg_name:''}</div><div class="session-meta">${(p.payment_date||'').toString().slice(0,10)} · ${ml[p.method]||p.method}</div></div>
+        <div style="flex:1"><div class="session-name">${p.fname} ${p.lname}${p.pkg_name ? ' — ' + p.pkg_name : ''}</div><div class="session-meta">${(p.payment_date || '').toString().slice(0, 10)} · ${ml[p.method] || p.method}</div></div>
         <div class="pay-amount ${b}" style="font-weight:600;color:var(--green)">+฿${Number(p.amount).toLocaleString()}</div>
       </div>`).join('');
-    document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart',amountsHidden);
-    const days30=[],vals30=[];for(let i=29;i>=0;i--){const dt=new Date();dt.setDate(dt.getDate()-i);const iso=getLocalDate(dt);const found=d.monthly30.find(r=>(r.day||'').toString().slice(0,10)===iso);days30.push(i%5===0?dt.getDate()+'/'+(dt.getMonth()+1):'');vals30.push(found?Number(found.total):0);}
-    destroyChart('payChart');charts.payChart=new Chart(document.getElementById('payChart'),{type:'line',data:{labels:days30,datasets:[{data:vals30,borderColor:'#e85d26',backgroundColor:'rgba(232,93,38,.08)',fill:true,tension:.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#7a7a72',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#7a7a72',font:{size:11},callback:v=>'฿'+v.toLocaleString()}}}}});
-  }catch(e){toast(e.message,true);}
-}
+            document.getElementById('pay-chart-wrap').classList.toggle('blurred-chart', amountsHidden);
+            const days30 = [], vals30 = []; for (let i = 29; i >= 0; i--) { const dt = new Date(); dt.setDate(dt.getDate() - i); const iso = getLocalDate(dt); const found = d.monthly30.find(r => (r.day || '').toString().slice(0, 10) === iso); days30.push(i % 5 === 0 ? dt.getDate() + '/' + (dt.getMonth() + 1) : ''); vals30.push(found ? Number(found.total) : 0); }
+            destroyChart('payChart'); charts.payChart = new Chart(document.getElementById('payChart'), { type: 'line', data: { labels: days30, datasets: [{ data: vals30, borderColor: '#e85d26', backgroundColor: 'rgba(232,93,38,.08)', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#7a7a72', font: { size: 10 } } }, y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { color: '#7a7a72', font: { size: 11 }, callback: v => '฿' + v.toLocaleString() } } } } });
+        } catch (e) { toast(e.message, true); }
+    }
 
-async function submitPayment(){
-  const member_id=document.getElementById('p-member').value;const amount=document.getElementById('p-amount').value;if(!member_id||!amount){toast('กรุณากรอกข้อมูลให้ครบ',true);return;}
-  try{await api('/api/payments',{method:'POST',body:{member_id,member_pkg_id:null,amount,method:document.getElementById('p-method').value,payment_date:document.getElementById('p-date').value}});closeModal('modal-payment');toast('บันทึกรายรับ ฿'+Number(amount).toLocaleString()+' แล้ว');loadPayments();}catch(e){toast(e.message,true);}
-}
+    async function submitPayment() {
+        const member_id = document.getElementById('p-member').value; const amount = document.getElementById('p-amount').value; if (!member_id || !amount) { toast('กรุณากรอกข้อมูลให้ครบ', true); return; }
+        try { await api('/api/payments', { method: 'POST', body: { member_id, member_pkg_id: null, amount, method: document.getElementById('p-method').value, payment_date: document.getElementById('p-date').value } }); closeModal('modal-payment'); toast('บันทึกรายรับ ฿' + Number(amount).toLocaleString() + ' แล้ว'); loadPayments(); } catch (e) { toast(e.message, true); }
+    }
 
-async function populateSelects(){
-  try{
-    const[members,trainers,packages]=await Promise.all([api('/api/members'),api('/api/trainers'),api('/api/packages')]);
-    const mO=members.map(m=>`<option value="${m.id}">${m.fname} ${m.lname}</option>`).join('');
-    const tO=trainers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-    const pO=packages.map(p=>`<option value="${p.id}">${p.name} — ฿${Number(p.price).toLocaleString()}</option>`).join('');
-    ['s-member','b-member','p-member'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">— เลือกสมาชิก —</option>'+mO;});
-    ['s-trainer','b-trainer','m-trainer'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">— ไม่ระบุ —</option>'+tO;});
-    document.getElementById('m-pkg').innerHTML='<option value="">— เลือกแพ็กเกจ —</option>'+pO;
-    document.getElementById('p-pkg').innerHTML='<option value="">— เลือกแพ็กเกจ —</option>'+pO;
-  }catch(e){console.warn('populateSelects:',e.message);}
-}
+    async function populateSelects() {
+        try {
+            const [members, trainers, packages] = await Promise.all([api('/api/members'), api('/api/trainers'), api('/api/packages')]);
+            const mO = members.map(m => `<option value="${m.id}">${m.fname} ${m.lname}</option>`).join('');
+            const tO = trainers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            const pO = packages.map(p => `<option value="${p.id}">${p.name} — ฿${Number(p.price).toLocaleString()}</option>`).join('');
+            ['s-member', 'b-member', 'p-member'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<option value="">— เลือกสมาชิก —</option>' + mO; });
+            ['s-trainer', 'b-trainer', 'm-trainer'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<option value="">— ไม่ระบุ —</option>' + tO; });
+            document.getElementById('m-pkg').innerHTML = '<option value="">— เลือกแพ็กเกจ —</option>' + pO;
+            document.getElementById('p-pkg').innerHTML = '<option value="">— เลือกแพ็กเกจ —</option>' + pO;
+        } catch (e) { console.warn('populateSelects:', e.message); }
+    }
 
-async function checkHealth(){
-  const el=document.getElementById('db-status');
-  try{await api('/api/health');el.className='db-status db-ok';el.innerHTML='<i class="ti ti-database"></i><span></span>';}
-  catch(e){el.className='db-status db-err';el.innerHTML='<i class="ti ti-database-off"></i><span></span>';}
-}
+    async function checkHealth() {
+        const el = document.getElementById('db-status');
+        try { await api('/api/health'); el.className = 'db-status db-ok'; el.innerHTML = '<i class="ti ti-database"></i><span></span>'; }
+        catch (e) { el.className = 'db-status db-err'; el.innerHTML = '<i class="ti ti-database-off"></i><span></span>'; }
+    }
 
-let mcSearchTimer=null;
-let mcSelectedId=null;
+    let mcSearchTimer = null;
+    let mcSelectedId = null;
 
-// แมปชื่อผู้ใช้ (username) → คำค้นหาชื่อสมาชิกของตัวเองในระบบ สำหรับหน้า "เช็คข้อมูลสมาชิก"
-// พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
-// ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
+    // แมปชื่อผู้ใช้ (username) → คำค้นหาชื่อสมาชิกของตัวเองในระบบ สำหรับหน้า "เช็คข้อมูลสมาชิก"
+    // พนักงานทั่วไป (ไม่ใช่แอดมิน) จะเห็นข้อมูลสมาชิกของตัวเองอัตโนมัติตามคำค้นหานี้ โดยไม่ต้องค้นหาเอง
+    // ถ้า username ไหนไม่ได้กำหนดไว้ในนี้ ระบบจะค้นหาด้วยชื่อ username ตรงๆ — แก้ไข/เพิ่มชื่อให้ตรงกับชื่อสมาชิกในระบบได้ที่นี่
     const STAFF_MEMBER_QUERY = {
         'Sirinthip': 'ศิรินทิพย์(พี่แนน)',
         'Chef': 'น้องเซฟ',
@@ -1039,120 +1044,124 @@ let mcSelectedId=null;
         'Patcharee': 'พัชรี(พี่น้อง)',
         'Praewphan': 'แพรวพรรณ(ปาปิ้ง&คุณแม่)',
         'Ariel&Jinglebell': 'แอเรียว&จิงเกอเบล',
-        'Nattasumon': 'ณัฏฐ์สุมน(พี่จา)'
+        'Nattasumon': 'ณัฏฐ์สุมน(พี่จา)',
+        'Nuchjaree': 'นุชจรีย์ (พี่นุช)(พี่หนึ่ง)',
+        'Kesinee': 'น้องเซฟ',
+        'Kesinee': 'แอเรียว&จิงเกอเบล',
+        'Unakorn': 'แอเรียว&จิงเกอเบล'
     };
 
-async function autoLoadMyInfo(){
-  const detailEl=document.getElementById('mc-detail');
-  detailEl.innerHTML='<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
-  const q=STAFF_MEMBER_QUERY[currentUser]||currentUser;
-  try{
-    const rows=await api('/api/members?q='+encodeURIComponent(q));
-    if(!rows.length){
-      detailEl.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">ไม่พบข้อมูลสมาชิกของคุณในระบบ<br>กรุณาติดต่อแอดมิน</div>';
-      return;
-    }
-    if(rows.length===1){
-      loadMyInfo(rows[0].id);
-      return;
-    }
-    detailEl.innerHTML='<div style="color:var(--muted);font-size:12.5px;margin-bottom:8px">พบชื่อที่ตรงกันหลายรายการ กรุณาเลือกรายการของคุณ</div>'+rows.map(m=>`<div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
-        <div class="av-row" style="flex:1"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone||''}</div></div></div>
+    async function autoLoadMyInfo() {
+        const detailEl = document.getElementById('mc-detail');
+        detailEl.innerHTML = '<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
+        const q = STAFF_MEMBER_QUERY[currentUser] || currentUser;
+        try {
+            const rows = await api('/api/members?q=' + encodeURIComponent(q));
+            if (!rows.length) {
+                detailEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">ไม่พบข้อมูลสมาชิกของคุณในระบบ<br>กรุณาติดต่อแอดมิน</div>';
+                return;
+            }
+            if (rows.length === 1) {
+                loadMyInfo(rows[0].id);
+                return;
+            }
+            detailEl.innerHTML = '<div style="color:var(--muted);font-size:12.5px;margin-bottom:8px">พบชื่อที่ตรงกันหลายรายการ กรุณาเลือกรายการของคุณ</div>' + rows.map(m => `<div class="session-row" style="cursor:pointer" onclick="loadMyInfo(${m.id})">
+        <div class="av-row" style="flex:1"><div class="av av-${m.color || 'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone || ''}</div></div></div>
         <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
       </div>`).join('');
-  }catch(e){toast(e.message,true);detailEl.innerHTML='';}
-}
+        } catch (e) { toast(e.message, true); detailEl.innerHTML = ''; }
+    }
 
-function initMyCheck(){
-  if(isStaffRestricted)autoLoadMyInfo();
-  else resetMyCheck();
-}
+    function initMyCheck() {
+        if (isStaffRestricted) autoLoadMyInfo();
+        else resetMyCheck();
+    }
 
-function resetMyCheck(){
-  const search=document.getElementById('mc-search');
-  if(search)search.value='';
-  document.getElementById('mc-results').innerHTML='';
-  document.getElementById('mc-detail').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>';
-  mcSelectedId=null;
-}
+    function resetMyCheck() {
+        const search = document.getElementById('mc-search');
+        if (search) search.value = '';
+        document.getElementById('mc-results').innerHTML = '';
+        document.getElementById('mc-detail').innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>';
+        mcSelectedId = null;
+    }
 
-function searchMyInfo(q){
-  clearTimeout(mcSearchTimer);
-  // ถ้าเลือกรายการไปแล้ว และยังไม่ได้ลบข้อความออก ให้คงข้อมูลเอาไว้ก่อน
-  if(mcSelectedId&&q.trim().length>=2){return;}
-  if(mcSelectedId){mcSelectedId=null;document.getElementById('mc-detail').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>';}
-  const resultsEl=document.getElementById('mc-results');
-  if(!q||q.trim().length<2){resultsEl.innerHTML='';return;}
-  mcSearchTimer=setTimeout(async()=>{
-    try{
-      const rows=await api('/api/members?q='+encodeURIComponent(q.trim()));
-      if(!rows.length){resultsEl.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 2px">ไม่พบชื่อนี้ในระบบ ลองตรวจสอบการสะกดอีกครั้ง</div>';return;}
-      resultsEl.innerHTML=rows.map(m=>`<div class="session-row" style="cursor:pointer" onmousedown="event.preventDefault()" onclick="selectMember(${m.id})">
-          <div class="av-row" style="flex:1"><div class="av av-${m.color||'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone||''}</div></div></div>
+    function searchMyInfo(q) {
+        clearTimeout(mcSearchTimer);
+        // ถ้าเลือกรายการไปแล้ว และยังไม่ได้ลบข้อความออก ให้คงข้อมูลเอาไว้ก่อน
+        if (mcSelectedId && q.trim().length >= 2) { return; }
+        if (mcSelectedId) { mcSelectedId = null; document.getElementById('mc-detail').innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:2.5rem">พิมพ์ชื่อด้านบนเพื่อค้นหาข้อมูลของคุณ</div>'; }
+        const resultsEl = document.getElementById('mc-results');
+        if (!q || q.trim().length < 2) { resultsEl.innerHTML = ''; return; }
+        mcSearchTimer = setTimeout(async () => {
+            try {
+                const rows = await api('/api/members?q=' + encodeURIComponent(q.trim()));
+                if (!rows.length) { resultsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 2px">ไม่พบชื่อนี้ในระบบ ลองตรวจสอบการสะกดอีกครั้ง</div>'; return; }
+                resultsEl.innerHTML = rows.map(m => `<div class="session-row" style="cursor:pointer" onmousedown="event.preventDefault()" onclick="selectMember(${m.id})">
+          <div class="av-row" style="flex:1"><div class="av av-${m.color || 'orange'}">${m.fname[0]}</div><div><div class="av-name">${m.fname} ${m.lname}</div><div class="av-sub">${m.phone || ''}</div></div></div>
           <i class="ti ti-chevron-right" style="color:var(--faint);align-self:center"></i>
         </div>`).join('');
-    }catch(e){toast(e.message,true);}
-  },300);
-}
+            } catch (e) { toast(e.message, true); }
+        }, 300);
+    }
 
-function selectMember(id){
-  document.getElementById('mc-results').innerHTML='';
-  loadMyInfo(id);
-}
+    function selectMember(id) {
+        document.getElementById('mc-results').innerHTML = '';
+        loadMyInfo(id);
+    }
 
-async function loadMyInfo(id){
-  mcSelectedId=id;
-  const detailEl=document.getElementById('mc-detail');
-  detailEl.innerHTML='<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
-  try{
-    const[members,sessions]=await Promise.all([api('/api/members'),api('/api/sessions')]);
-    const m=members.find(x=>x.id===id);
-    if(!m){detailEl.innerHTML='';return;}
-    const todayIso=getLocalDate();
-    const today=new Date(todayIso);
-    const startIso=(m.start_date||'').toString().slice(0,10);
-    const expiryIso=(m.expiry_date||'').toString().slice(0,10);
-    const start=startIso?new Date(startIso):null;
-    const expiry=expiryIso?new Date(expiryIso):null;
-    const daysUsed=start?Math.max(0,Math.round((today-start)/86400000)):null;
-    const daysLeft=expiry?Math.round((expiry-today)/86400000):null;
-    const hu=m.hours_total!=null?m.hours_total-(m.hours_used||0):null;
-    const pct=m.hours_total?Math.round((hu/m.hours_total)*100):null;
-    const sb=s=>s==='active'?'badge-green">แอคทีฟ':s==='expiring'?'badge-amber">ใกล้หมด':s==='expired'?'badge-red">หมดอายุ':'badge-gray">ไม่ระบุ';
+    async function loadMyInfo(id) {
+        mcSelectedId = id;
+        const detailEl = document.getElementById('mc-detail');
+        detailEl.innerHTML = '<div class="page-spinner"><div class="spinner"></div>กำลังโหลด...</div>';
+        try {
+            const [members, sessions] = await Promise.all([api('/api/members'), api('/api/sessions')]);
+            const m = members.find(x => x.id === id);
+            if (!m) { detailEl.innerHTML = ''; return; }
+            const todayIso = getLocalDate();
+            const today = new Date(todayIso);
+            const startIso = (m.start_date || '').toString().slice(0, 10);
+            const expiryIso = (m.expiry_date || '').toString().slice(0, 10);
+            const start = startIso ? new Date(startIso) : null;
+            const expiry = expiryIso ? new Date(expiryIso) : null;
+            const daysUsed = start ? Math.max(0, Math.round((today - start) / 86400000)) : null;
+            const daysLeft = expiry ? Math.round((expiry - today) / 86400000) : null;
+            const hu = m.hours_total != null ? m.hours_total - (m.hours_used || 0) : null;
+            const pct = m.hours_total ? Math.round((hu / m.hours_total) * 100) : null;
+            const sb = s => s === 'active' ? 'badge-green">แอคทีฟ' : s === 'expiring' ? 'badge-amber">ใกล้หมด' : s === 'expired' ? 'badge-red">หมดอายุ' : 'badge-gray">ไม่ระบุ';
 
-    const ssb=s=>s==='done'?'badge-green">เสร็จแล้ว':s==='active'?'badge-orange">กำลังเทรน':s==='cancelled'?'badge-red">ยกเลิก':'badge-blue">นัดไว้';
+            const ssb = s => s === 'done' ? 'badge-green">เสร็จแล้ว' : s === 'active' ? 'badge-orange">กำลังเทรน' : s === 'cancelled' ? 'badge-red">ยกเลิก' : 'badge-blue">นัดไว้';
 
-    const mySessions=sessions
-      .filter(s=>(s.member_id!=null?s.member_id===id:(s.fname===m.fname&&s.lname===m.lname)))
-      .sort((a,b)=>((b.session_date||'')+String(b.session_time||'')).localeCompare((a.session_date||'')+String(a.session_time||'')));
+            const mySessions = sessions
+                .filter(s => (s.member_id != null ? s.member_id === id : (s.fname === m.fname && s.lname === m.lname)))
+                .sort((a, b) => ((b.session_date || '') + String(b.session_time || '')).localeCompare((a.session_date || '') + String(a.session_time || '')));
 
-    detailEl.innerHTML=`
+            detailEl.innerHTML = `
       <div class="card mb">
         <div class="card-hd">
           <div class="card-title"><i class="ti ti-id-badge-2"></i>${m.fname} ${m.lname}</div>
-          <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status||'active')}</span>${isStaffRestricted?'':'<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status || 'active')}</span>${isStaffRestricted ? '' : '<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
         </div>
         <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:0">
-          <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">แพ็กเกจปัจจุบัน</div><div class="kpi-val" style="font-size:17px">${m.pkg_name||'— ไม่มีแพ็กเกจ —'}</div></div>
-          <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">วันหมดอายุ</div><div class="kpi-val" style="font-size:17px">${expiryIso||'—'}</div><div class="kpi-sub">${daysLeft!=null?(daysLeft>=0?'เหลืออีก '+daysLeft+' วัน':'เกินกำหนด '+Math.abs(daysLeft)+' วัน'):''}</div></div>
-          <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">ใช้งานมาแล้ว</div><div class="kpi-val" style="font-size:17px">${daysUsed!=null?daysUsed+' วัน':'—'}</div><div class="kpi-sub">เริ่มใช้ ${startIso||'—'}</div></div>
-          <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">ชั่วโมงคงเหลือ</div><div class="kpi-val" style="font-size:17px">${hu!=null?hu.toFixed(1)+' / '+m.hours_total:'—'}</div>${hu!=null?`<div class="pkg-bar"><div class="pkg-fill" style="width:${Math.max(0,pct)}%;background:${pct<20?'var(--red)':pct<40?'var(--amber)':'var(--green)'}"></div></div>`:''}</div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">แพ็กเกจปัจจุบัน</div><div class="kpi-val" style="font-size:17px">${m.pkg_name || '— ไม่มีแพ็กเกจ —'}</div></div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">วันหมดอายุ</div><div class="kpi-val" style="font-size:17px">${expiryIso || '—'}</div><div class="kpi-sub">${daysLeft != null ? (daysLeft >= 0 ? 'เหลืออีก ' + daysLeft + ' วัน' : 'เกินกำหนด ' + Math.abs(daysLeft) + ' วัน') : ''}</div></div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">ใช้งานมาแล้ว</div><div class="kpi-val" style="font-size:17px">${daysUsed != null ? daysUsed + ' วัน' : '—'}</div><div class="kpi-sub">เริ่มใช้ ${startIso || '—'}</div></div>
+          <div class="kpi"><div class="kpi-accent" style="background:var(--amber)"></div><div class="kpi-label">ชั่วโมงคงเหลือ</div><div class="kpi-val" style="font-size:17px">${hu != null ? hu.toFixed(1) + ' / ' + m.hours_total : '—'}</div>${hu != null ? `<div class="pkg-bar"><div class="pkg-fill" style="width:${Math.max(0, pct)}%;background:${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}"></div></div>` : ''}</div>
         </div>
       </div>
       <div class="card">
         <div class="card-hd"><div class="card-title"><i class="ti ti-history"></i>ประวัติเซสชั่นทั้งหมด</div><span style="font-size:12px;color:var(--muted)">${mySessions.length} รายการ</span></div>
         <table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>หัวข้อ</th><th>สถานะ</th></tr></thead>
-        <tbody>${mySessions.length?mySessions.map(s=>`<tr><td>${(s.session_date||'').toString().slice(0,10)}</td><td>${String(s.session_time||'').slice(0,5)||'—'}</td><td>${s.type}</td><td>${s.trainer_name||'—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic||'—'}</td><td><span class="badge ${ssb(s.status)}</span></td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่น</td></tr>'}</tbody></table>
+        <tbody>${mySessions.length ? mySessions.map(s => `<tr><td>${(s.session_date || '').toString().slice(0, 10)}</td><td>${String(s.session_time || '').slice(0, 5) || '—'}</td><td>${s.type}</td><td>${s.trainer_name || '—'}</td><td>${s.hours_used} ชม.</td><td>${s.topic || '—'}</td><td><span class="badge ${ssb(s.status)}</span></td></tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1.5rem">ยังไม่มีประวัติเซสชั่น</td></tr>'}</tbody></table>
       </div>`;
-  }catch(e){toast(e.message,true);detailEl.innerHTML='';}
-}
-//function applyPermissions(){
-//  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
-//    const el=document.getElementById(id);
-//    if(el)el.style.display=isStaffRestricted?'none':'';ท
-//  });
-//  const mcCard=document.getElementById('mc-search-card');
-//  if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
+        } catch (e) { toast(e.message, true); detailEl.innerHTML = ''; }
+    }
+    //function applyPermissions(){
+    //  ['btn-add-member','btn-add-session','btn-add-payment'].forEach(id=>{
+    //    const el=document.getElementById(id);
+    //    if(el)el.style.display=isStaffRestricted?'none':'';ท
+    //  });
+    //  const mcCard=document.getElementById('mc-search-card');
+    //  if(mcCard)mcCard.style.display=isStaffRestricted?'none':'';
     //}
     function applyPermissions() {
         ['btn-add-member', 'btn-add-session', 'btn-add-payment'].forEach(id => {
@@ -1175,28 +1184,28 @@ async function loadMyInfo(id){
         if (mcCard) mcCard.style.display = isStaffRestricted ? 'none' : '';
     }
 
-function initApp(){
-  document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-  applyPermissions();
-  const todayStr=getLocalDate();
-  ['s-date','b-date','p-date','m-start'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=todayStr;});
-  updateCalLabel();
-  document.getElementById('page-sub').textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  checkHealth();
-  if(isStaffRestricted){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-mycheck').classList.add('active');
-    document.querySelectorAll('.nav-btn').forEach(b=>{
-      b.classList.remove('active');
-      if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'mycheck'"))b.classList.add('active');
-    });
-    document.getElementById('page-title').textContent='ข้อมูลสมาชิก';
-    document.getElementById('page-sub').textContent='ค้นหาและดูข้อมูล';
-    populateSelects().then(()=>initMyCheck());
-  }else{
-    populateSelects().then(()=>loadBookings());
-  }
-}
+    function initApp() {
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+        applyPermissions();
+        const todayStr = getLocalDate();
+        ['s-date', 'b-date', 'p-date', 'm-start'].forEach(id => { const el = document.getElementById(id); if (el) el.value = todayStr; });
+        updateCalLabel();
+        document.getElementById('page-sub').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        checkHealth();
+        if (isStaffRestricted) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-mycheck').classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('active');
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'mycheck'")) b.classList.add('active');
+            });
+            document.getElementById('page-title').textContent = 'ข้อมูลสมาชิก';
+            document.getElementById('page-sub').textContent = 'ค้นหาและดูข้อมูล';
+            populateSelects().then(() => initMyCheck());
+        } else {
+            populateSelects().then(() => loadBookings());
+        }
+    }
 </script>
 </body>
 </html>
