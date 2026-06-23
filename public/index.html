@@ -526,7 +526,8 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         'Rujira': 'issara09',
         'Phattharaseth': 'issara10',
         'Irene': 'issara11',
-        'Nuchjaree': 'issara12'
+        'Nuchjaree': 'issara12',
+        'Sangduen': 'issara13',
     }; // เปลี่ยนชื่อผู้ใช้/รหัสผ่านได้ที่นี่ (username: password)
 
     // username ในนี้ = สิทธิ์แอดมิน ทำรายการได้ทุกหน้า
@@ -1140,10 +1141,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                 } catch (e) { console.warn('session sync skip:', e.message); }
             }
 
-    //        toast('ยกเลิกการจองแล้ว');
-    //        loadBookings();
-    //    } catch (e) { toast(e.message, true); }
-    //}
+            //        toast('ยกเลิกการจองแล้ว');
+            //        loadBookings();
+            //    } catch (e) { toast(e.message, true); }
+            //}
             toast('ยกเลิกการจองแล้ว');
             loadBookings();
             if (document.getElementById('page-sessions').classList.contains('active')) loadSessions();
@@ -1214,6 +1215,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         'Praewphan': ['แพรวพรรณ(ปาปิ้ง&คุณแม่)'],
         'Nattasumon': ['ณัฏฐ์สุมน(พี่จา)'],
         'Nuchjaree': ['นุชจรีย์ (พี่นุช)(พี่หนึ่ง)'],
+        'Kesinee': ['แสงเดือน(พี่เดือน)', 'สมพล(พี่บุ๋ม)']
     };
 
     async function autoLoadMyInfo() {
@@ -1336,9 +1338,9 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       <div class="card mb">
         <div class="card-hd">
           <div style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; color:var(--orange); display:flex; align-items:center; gap:8px">
-          <i class="ti ti-id-badge-2" style="color:var(--orange); font-size:20px"></i>
-          <span style="text-decoration: underline;">${m.fname} ${m.lname}</span>
-        </div>
+              <i class="ti ti-id-badge-2" style="color:var(--orange); font-size:20px"></i>
+              <span style="text-decoration: underline;">${m.fname} ${m.lname}</span>
+            </div>
           <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status || 'active')}</span>${isStaffRestricted ? '' : '<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
         </div>
         <div class="kpi-grid" style="margin-bottom:0;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
