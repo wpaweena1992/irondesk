@@ -972,10 +972,14 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             if (b.status === 'cancelled') return true;
             const bDate = (b.booking_date || '').toString().slice(0, 10);
             const bTime = String(b.booking_time || '').slice(0, 5);
-            return cancelledSessions.some(s =>
-                s.member_id == b.member_id &&
-                (s.session_date || '').toString().slice(0, 10) === bDate &&
-                String(s.session_time || '').slice(0, 5) === bTime
+            return cancelledSessions.some(s => {
+                const sTime = String(s.session_time || '').slice(0, 5);
+                if (sDate !== bDate || sTime !== bTime) return false;
+                // จับคู่ด้วย member_id ถ้ามีทั้งคู่ ไม่งั้น fallback เป็นชื่อ
+                if (b.member_id != null && s.member_id != null) return s.member_id == b.member_id;
+                const nameMatch = (s.fname || '') === (b.fname || '');
+                const lnameOk = (!s.lname || !b.lname) || (s.lname === b.lname);
+                return nameMatch && lnameOk;
             );
         };
         const firstDay = new Date(calYear, calMonth - 1, 1); const lastDay = new Date(calYear, calMonth, 0);
