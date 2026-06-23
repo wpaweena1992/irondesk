@@ -941,7 +941,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                             b.status !== 'cancelled'
                         );
                         if (matchBooking) {
-                            await api('/api/bookings/' + matchBooking.id, { method: 'DELETE' });
+                            await api('/api/bookings/' + matchBooking.id + '/status', { method: 'PATCH', body: { status: 'cancelled' } });
                         }
                     }
                 } catch (e) { console.warn('booking sync skip:', e.message); }
