@@ -472,7 +472,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
   <div class="modal">
     <div class="modal-head"><div class="modal-title">เพิ่มแพ็กเกจใหม่</div><button class="close-btn" onclick="closeModal('modal-package')"><i class="ti ti-x"></i></button></div>
     <div class="fgroup"><label class="flabel">ชื่อแพ็กเกจ</label><input class="finput" id="np-name" placeholder="เช่น PT 30 ชม. Premium"></div>
-    <div class="frow"><div class="fgroup"><label class="flabel">ราคา (฿)</label><input type="number" class="finput" id="np-price" placeholder="10000"></div><div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="np-type"><option value="PT_hours">PT ชั่วโมง</option><option value="monthly">รายเดือน</option><option value="class_sessions">คลาสครั้ง</option><option value="bundle">บันเดิล</option></select></div></div>
+    <div class="frow"><div class="fgroup"><label class="flabel">ราคา (฿)</label><input type="number" class="finput" id="np-price" placeholder="10000"></div><div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="np-type"><option value="PT_hours">PT ชั่วโมง</option><option value="monthly">รายเดือน</option><option value="class_sessions">คลาสครั้ง</option><option value="bundle">รายปี</option></select></div></div>
     <div class="frow"><div class="fgroup"><label class="flabel">จำนวน ชม./ครั้ง</label><input type="number" class="finput" id="np-qty" placeholder="30"></div><div class="fgroup"><label class="flabel">อายุ (วัน)</label><input type="number" class="finput" id="np-validity" placeholder="90"></div></div>
     <div class="fgroup"><label class="flabel">คำอธิบาย</label><input class="finput" id="np-desc" placeholder="เช่น สำหรับผู้เริ่มต้น"></div>
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-package')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="submitPackage()"><i class="ti ti-plus"></i>เพิ่มแพ็กเกจ</button></div>
@@ -483,7 +483,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     <div class="modal-head"><div class="modal-title">แก้ไขแพ็กเกจ</div><button class="close-btn" onclick="closeModal('modal-edit-package')"><i class="ti ti-x"></i></button></div>
     <input type="hidden" id="ep-id">
     <div class="fgroup"><label class="flabel">ชื่อแพ็กเกจ</label><input class="finput" id="ep-name"></div>
-    <div class="frow"><div class="fgroup"><label class="flabel">ราคา (฿)</label><input type="number" class="finput" id="ep-price"></div><div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="ep-type"><option value="PT_hours">PT ชั่วโมง</option><option value="monthly">รายเดือน</option><option value="class_sessions">คลาสครั้ง</option><option value="bundle">บันเดิล</option></select></div></div>
+    <div class="frow"><div class="fgroup"><label class="flabel">ราคา (฿)</label><input type="number" class="finput" id="ep-price"></div><div class="fgroup"><label class="flabel">ประเภท</label><select class="fselect" id="ep-type"><option value="PT_hours">PT ชั่วโมง</option><option value="monthly">รายเดือน</option><option value="class_sessions">คลาสครั้ง</option><option value="bundle">รายปี</option></select></div></div>
     <div class="frow"><div class="fgroup"><label class="flabel">จำนวน ชม./ครั้ง</label><input type="number" class="finput" id="ep-qty"></div><div class="fgroup"><label class="flabel">อายุ (วัน)</label><input type="number" class="finput" id="ep-validity"></div></div>
     <div class="fgroup"><label class="flabel">คำอธิบาย</label><input class="finput" id="ep-desc"></div>
     <div style="display:flex;gap:8px;margin-top:4px"><button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-edit-package')">ยกเลิก</button><button class="btn btn-orange" style="flex:2" onclick="updatePackage()"><i class="ti ti-device-floppy"></i>บันทึกการแก้ไข</button></div>
@@ -651,7 +651,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     function loadPage(id) { if (id === 'dashboard') loadDashboard(); if (id === 'members') loadMembers(); if (id === 'packages') loadPackages(); if (id === 'sessions') loadSessions(); if (id === 'booking') loadBookings(); if (id === 'payments') loadPayments(); if (id === 'mycheck') initMyCheck(); }
     const DAYS_TH = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
     const pkgColors = { PT_hours: '#e85d26', monthly: '#2563b0', class_sessions: '#2a7d4f', bundle: '#6d3fa0' };
-    const pkgLabels = { PT_hours: 'PT ชั่วโมง', monthly: 'รายเดือน', class_sessions: 'คลาสกลุ่ม', bundle: 'บันเดิล' };
+    const pkgLabels = { PT_hours: 'PT ชั่วโมง', monthly: 'รายเดือน', class_sessions: 'คลาสกลุ่ม', bundle: 'รายปี' };
 
     async function loadDashboard() {
         try {
@@ -1241,7 +1241,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
           <div class="card-title"><i class="ti ti-id-badge-2"></i>${m.fname} ${m.lname}</div>
           <div style="display:flex;align-items:center;gap:8px"><span class="badge ${sb(m.status || 'active')}</span>${isStaffRestricted ? '' : '<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}</div>
         </div>
-        <div class="kpi-grid" style="margin-bottom:0">
+        <div class="kpi-grid" style="margin-bottom:0;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
           <div class="kpi"><div class="kpi-accent" style="background:var(--orange)"></div><div class="kpi-label">แพ็กเกจปัจจุบัน</div><div class="kpi-val" style="font-size:17px">${m.pkg_name || '— ไม่มีแพ็กเกจ —'}</div></div>
           <div class="kpi"><div class="kpi-accent" style="background:var(--blue)"></div><div class="kpi-label">วันหมดอายุ</div><div class="kpi-val" style="font-size:17px">${expiryIso || '—'}</div><div class="kpi-sub">${daysLeft != null ? (daysLeft >= 0 ? 'เหลืออีก ' + daysLeft + ' วัน' : 'เกินกำหนด ' + Math.abs(daysLeft) + ' วัน') : ''}</div></div>
           <div class="kpi"><div class="kpi-accent" style="background:var(--green)"></div><div class="kpi-label">ใช้งานมาแล้ว</div><div class="kpi-val" style="font-size:17px">${daysUsed != null ? daysUsed + ' วัน' : '—'}</div><div class="kpi-sub">เริ่มใช้ ${startIso || '—'}</div></div>
@@ -1280,8 +1280,16 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             }
         });
         // mc-search-card ไม่ซ่อน เพียงแต่ staff จะถูก autoLoadMyInfo แทน
+        //const mcCard = document.getElementById('mc-search-card');
+        //if (mcCard) mcCard.style.display = isStaffRestricted ? 'none' : '';
         const mcCard = document.getElementById('mc-search-card');
-        if (mcCard) mcCard.style.display = isStaffRestricted ? 'none' : '';
+        if (mcCard) {
+            mcCard.style.visibility = isStaffRestricted ? 'hidden' : '';
+            mcCard.style.height = isStaffRestricted ? '0' : '';
+            mcCard.style.overflow = isStaffRestricted ? 'hidden' : '';
+            mcCard.style.margin = isStaffRestricted ? '0' : '';
+            mcCard.style.padding = isStaffRestricted ? '0' : '';
+        }
     }
 
     function initApp() {
