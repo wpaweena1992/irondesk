@@ -79,18 +79,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .badge-amber{background:var(--amber-lt);color:var(--amber)}
 .badge-red{background:var(--red-lt);color:var(--red)}
 .badge-gray{background:var(--surface2);color:var(--muted)}
-/*.tbl{width:100%;border-collapse:collapse}*/
-    .tbl {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 0
-    }
-
-    .tbl-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        width: 100%
-    }
+.tbl{width:100%;border-collapse:collapse}
 .tbl th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 12px 10px;border-bottom:1px solid var(--border)}
 .tbl td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
@@ -356,18 +345,17 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         <button class="tab-btn active" onclick="switchTab(this,'tab-today')">วันนี้</button>
         <button class="tab-btn" onclick="switchTab(this,'tab-history')">ประวัติ</button>
       </div>
-      <div id="tab-today">
-          <div class="card"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div></div>
-          <div id="tab-history" style="display:none">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
-                  <input type="text" class="finput" id="hist-search-name" style="max-width:220px" placeholder="ค้นหาชื่อสมาชิก…" oninput="filterHistory()">
-                  <input type="date" class="finput" id="hist-search-date" style="max-width:180px" onchange="filterHistory()">
-                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('hist-search-name').value='';document.getElementById('hist-search-date').value='';filterHistory()"><i class="ti ti-x"></i>ล้างค้นหา</button>
-                  <span id="hist-count" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
-              </div>
-              <div class="card">
-                  <div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><div style="overflow-x:auto"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
-              </div></div></div>
+      <div id="tab-today"><div class="card"><table class="tbl"><thead><tr><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th><th>ชั่วโมง</th><th>สถานะ</th><th></th></tr></thead><tbody id="sessions-body"><tr><td colspan="7"><div 	class="page-spinner"><div class="spinner"></div></div></td></tr></tbody></table></div></div>
+      	<div id="tab-history" style="display:none">
+        	<div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+          	<input type="text" class="finput" id="hist-search-name" style="max-width:220px" placeholder="ค้นหาชื่อสมาชิก…" oninput="filterHistory()">
+          	<input type="date" class="finput" id="hist-search-date" style="max-width:180px" onchange="filterHistory()">
+          	<button class="btn btn-ghost btn-sm" onclick="document.getElementById('hist-search-name').value='';document.getElementById('hist-search-date').value='';filterHistory()"><i class="ti ti-x"></i>ล้างค้นหา</button>
+          	<span id="hist-count" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
+        	</div>
+        <div class="card"><div style="position:relative;height:220px;margin-bottom:1rem"><canvas id="sessionHistChart"></canvas></div><table class="tbl"><thead><tr><th>วันที่</th><th>เวลา</th><th>สมาชิก</th><th>ประเภท</th><th>เทรนเนอร์</th>	<th>ชั่วโมง</th><th>สถานะ</th></tr></thead><tbody id="hist-body"></tbody></table></div>
+      </div>
+    </div>
     <div id="page-booking" class="page active">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600" id="cal-month-label"></div>
