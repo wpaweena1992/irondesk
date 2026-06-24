@@ -1288,14 +1288,39 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                 .filter(s => (s.member_id != null ? s.member_id === id : (s.fname === m.fname && s.lname === m.lname)))
                 .sort((a, b) => ((b.session_date || '') + String(b.session_time || '')).localeCompare((a.session_date || '') + String(a.session_time || '')));
 
+            const _rc = pct != null ? (pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)') : 'var(--green)';
+            const _sp = pct != null ? Math.max(0, pct) : 0;
+            const _do = (219.9 * (1 - _sp / 100)).toFixed(1);
+            const _ini = (m.fname||'').charAt(0) + (m.lname||'').charAt(0);
+            const _hs = hu != null ? (
+                '<div style="background:var(--surface2);border-radius:var(--r-md);padding:1rem;display:flex;align-items:center;gap:20px">' +
+                '<svg width="88" height="88" viewBox="0 0 88 88" style="flex-shrink:0">' +
+                '<circle cx="44" cy="44" r="35" fill="none" stroke="var(--surface3)" stroke-width="7"/>' +
+                '<circle cx="44" cy="44" r="35" fill="none" stroke="' + _rc + '" stroke-width="7" stroke-dasharray="219.9" stroke-dashoffset="' + _do + '" stroke-linecap="round" transform="rotate(-90 44 44)"/>' +
+                '<text x="44" y="40" text-anchor="middle" font-size="17" font-weight="700" font-family="IBM Plex Sans Thai,sans-serif" style="fill:' + _rc + '">' + hu.toFixed(1) + '</text>' +
+                '<text x="44" y="55" text-anchor="middle" font-size="10" font-family="IBM Plex Sans Thai,sans-serif" style="fill:var(--muted)">ชม. คงเหลือ</text>' +
+                '</svg>' +
+                '<div style="flex:1;min-width:0">' +
+                '<div class="kpi-label" style="display:flex;align-items:center;gap:5px;margin-bottom:5px"><i class="ti ti-clock" style="font-size:14px"></i>ชั่วโมงคงเหลือ</div>' +
+                '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">' +
+                '<span style="font-size:26px;font-weight:700;font-family:Space Grotesk,sans-serif;color:' + _rc + '">' + hu.toFixed(1) + '</span>' +
+                '<span style="font-size:14px;color:var(--muted)">/ ' + m.hours_total + ' ชม.</span>' +
+                '</div>' +
+                '<div class="pkg-bar"><div class="pkg-fill" style="width:' + _sp + '%;background:' + _rc + '"></div></div>' +
+                '<div style="display:flex;justify-content:space-between;margin-top:5px">' +
+                '<span style="font-size:11px;color:var(--muted)">ใช้ไป ' + (m.hours_used||0).toFixed(1) + ' ชม. (' + (100 - _sp) + '%)</span>' +
+                '<span style="font-size:11px;font-weight:600;color:' + _rc + '">เหลือ ' + hu.toFixed(1) + ' ชม.</span>' +
+                '</div></div></div>'
+            ) : '';
+
             detailEl.innerHTML = `
       <div class="card mb">
         <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:1rem;margin-bottom:1rem;border-bottom:1px solid var(--border)">
           <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--green-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--green);flex-shrink:0">${(m.fname||'').charAt(0)}${(m.lname||'').charAt(0)}</div>
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--green-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--green);flex-shrink:0">${_ini}</div>
             <div>
               <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px">${m.fname} ${m.lname}</div>
-              <span class="badge ${sb(m.status || 'active')}"></span>
+              <span class="badge ${sb(m.status || 'active')}</span>
             </div>
           </div>
           ${isStaffRestricted ? '' : '<button class="btn btn-ghost btn-sm" onclick="resetMyCheck()"><i class="ti ti-arrow-left"></i>ค้นหาใหม่</button>'}
@@ -1316,31 +1341,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             <div style="font-size:12px;color:var(--muted);margin-top:2px">เริ่มใช้ ${startIso || '—'}</div>
           </div>
         </div>
-        ${hu != null ? `
-        <div style="background:var(--surface2);border-radius:var(--r-md);padding:1rem;display:flex;align-items:center;gap:20px">
-          <svg width="88" height="88" viewBox="0 0 88 88" style="flex-shrink:0">
-            <circle cx="44" cy="44" r="35" fill="none" stroke="var(--surface3)" stroke-width="7"/>
-            <circle cx="44" cy="44" r="35" fill="none" stroke="${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}" stroke-width="7"
-              stroke-dasharray="219.9" stroke-dashoffset="${(219.9*(1-Math.max(0,pct)/100)).toFixed(1)}"
-              stroke-linecap="round" transform="rotate(-90 44 44)"/>
-            <text x="44" y="40" text-anchor="middle" font-size="17" font-weight="700" font-family="'Space Grotesk',sans-serif" fill="${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}">${hu.toFixed(1)}</text>
-            <text x="44" y="55" text-anchor="middle" font-size="10" font-family="'IBM Plex Sans Thai',sans-serif" fill="var(--muted)">ชม. คงเหลือ</text>
-          </svg>
-          <div style="flex:1;min-width:0">
-            <div class="kpi-label" style="display:flex;align-items:center;gap:5px;margin-bottom:5px"><i class="ti ti-clock" style="font-size:14px"></i>ชั่วโมงคงเหลือ</div>
-            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">
-              <span style="font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}">${hu.toFixed(1)}</span>
-              <span style="font-size:14px;color:var(--muted)">/ ${m.hours_total} ชม.</span>
-            </div>
-            <div class="pkg-bar">
-              <div class="pkg-fill" style="width:${Math.max(0,pct)}%;background:${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;margin-top:5px">
-              <span style="font-size:11px;color:var(--muted)">ใช้ไป ${(m.hours_used||0).toFixed(1)} ชม. (${Math.max(0,100-pct)}%)</span>
-              <span style="font-size:11px;font-weight:600;color:${pct < 20 ? 'var(--red)' : pct < 40 ? 'var(--amber)' : 'var(--green)'}">เหลือ ${hu.toFixed(1)} ชม.</span>
-            </div>
-          </div>
-        </div>` : ''}
+        ${_hs}
       </div>
       ${mySessions.length === 0 ? '' : `
       <div class="card">
