@@ -1278,8 +1278,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             const expiry = expiryIso ? new Date(expiryIso) : null;
             const daysUsed = start ? Math.max(0, Math.round((today - start) / 86400000)) : null;
             const daysLeft = expiry ? Math.round((expiry - today) / 86400000) : null;
-            const hu = m.hours_total != null ? m.hours_total - (m.hours_used || 0) : null;
-            const pct = m.hours_total ? Math.round((hu / m.hours_total) * 100) : null;
+            const _ht = m.hours_total != null ? Number(m.hours_total) : null;
+            const _hused = Number(m.hours_used || 0);
+            const hu = _ht != null ? _ht - _hused : null;
+            const pct = _ht ? Math.round((hu / _ht) * 100) : null;
             const sb = s => s === 'active' ? 'badge-green">แอคทีฟ' : s === 'expiring' ? 'badge-amber">ใกล้หมด' : s === 'expired' ? 'badge-red">หมดอายุ' : 'badge-gray">ไม่ระบุ';
 
             const ssb = s => s === 'done' ? 'badge-green">เสร็จแล้ว' : s === 'active' ? 'badge-orange">กำลังเทรน' : s === 'cancelled' ? 'badge-red">ยกเลิก' : 'badge-blue">นัดไว้';
@@ -1304,11 +1306,11 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
                 '<div class="kpi-label" style="display:flex;align-items:center;gap:5px;margin-bottom:5px"><i class="ti ti-clock" style="font-size:14px"></i>ชั่วโมงคงเหลือ</div>' +
                 '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px">' +
                 '<span style="font-size:26px;font-weight:700;font-family:Space Grotesk,sans-serif;color:' + _rc + '">' + hu.toFixed(1) + '</span>' +
-                '<span style="font-size:14px;color:var(--muted)">/ ' + m.hours_total + ' ชม.</span>' +
+                '<span style="font-size:14px;color:var(--muted)">/ ' + _ht + ' ชม.</span>' +
                 '</div>' +
                 '<div class="pkg-bar"><div class="pkg-fill" style="width:' + _sp + '%;background:' + _rc + '"></div></div>' +
                 '<div style="display:flex;justify-content:space-between;margin-top:5px">' +
-                '<span style="font-size:11px;color:var(--muted)">ใช้ไป ' + (m.hours_used||0).toFixed(1) + ' ชม. (' + (100 - _sp) + '%)</span>' +
+                '<span style="font-size:11px;color:var(--muted)">ใช้ไป ' + _hused.toFixed(1) + ' ชม. (' + (100 - _sp) + '%)</span>' +
                 '<span style="font-size:11px;font-weight:600;color:' + _rc + '">เหลือ ' + hu.toFixed(1) + ' ชม.</span>' +
                 '</div></div></div>'
             ) : '';
