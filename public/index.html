@@ -186,13 +186,8 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 #tab-today .tbl td[data-label="สมาชิก"]{align-items:flex-start}
 #tab-today .tbl td[data-label="สถานะ"] > div{flex-wrap:wrap;justify-content:flex-end}
 #tab-today .tbl td[data-label="สถานะ"] select{flex:1;min-width:0}
-.mc-hist .tbl,.mc-hist .tbl tbody,.mc-hist .tbl tr,.mc-hist .tbl td{display:block;width:100%}
-.mc-hist .tbl thead{display:none}
-.mc-hist .tbl tr{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:6px 12px;margin-bottom:10px}
-.mc-hist .tbl tbody tr:hover td{background:transparent}
-.mc-hist .tbl td{border:none;border-bottom:1px solid var(--border);padding:8px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;text-align:right}
-.mc-hist .tbl tr td:last-child{border-bottom:none}
-.mc-hist .tbl td::before{content:attr(data-label);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;text-align:left;flex-shrink:0}
+.mc-hist .tbl th:nth-child(3),.mc-hist .tbl td:nth-child(3),.mc-hist .tbl th:nth-child(4),.mc-hist .tbl td:nth-child(4),.mc-hist .tbl th:nth-child(6),.mc-hist .tbl td:nth-child(6){display:none}
+.mc-hist .tbl th,.mc-hist .tbl td{padding-left:8px;padding-right:8px;font-size:12.5px}
 #mc-detail .mc-hours{flex-direction:column;text-align:center;gap:12px}
 #mc-detail .mc-hours > div{width:100%}
 }
