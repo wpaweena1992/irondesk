@@ -1340,7 +1340,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
           <div style="display:flex;align-items:center;gap:12px">
             <div style="width:44px;height:44px;border-radius:50%;background:var(--green-lt);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--green);flex-shrink:0">${_ini}</div>
             <div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px">${m.fname} ${m.lname}</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px">${m.fname}${m.lname && m.lname.trim() && m.lname.trim() !== '-' ? ' ' + m.lname : ''}</div>
               <span class="badge ${sb(m.status || 'active')}</span>
             </div>
           </div>
