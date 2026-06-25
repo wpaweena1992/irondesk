@@ -116,6 +116,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
 .cal-cell{min-height:70px;border:1px solid var(--border);border-radius:var(--r-sm);padding:5px;background:var(--surface);transition:border-color .15s}
 .cal-cell:hover{border-color:var(--border2)}
 .cal-cell.today{border-color:var(--orange)}
+.cal-cell.selected{border-color:var(--orange);box-shadow:0 0 0 2px rgba(232,93,38,.25)}
 .cal-cell.other-month{background:var(--surface2)}
 .cal-day-num{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
 .cal-cell.today .cal-day-num{color:var(--orange)}
@@ -938,18 +939,22 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
     // เก็บข้อมูลของแต่ละช่องวันไว้ใน object เพื่อหลีกเลี่ยงปัญหา escape ใน onclick
     let _calCellData = {};
 
-    function showCalDetail(cellId) {
+    function showCalDetail(cellId, scroll = true) {
         const data = _calCellData[cellId];
         if (!data) return;
         const { iso, evts } = data;
         const detail = document.getElementById('cal-detail-inner');
         if (!detail) return;
+        // ไฮไลต์ช่องวันที่กำลังเลือกอยู่
+        document.querySelectorAll('.cal-cell.selected').forEach(el => el.classList.remove('selected'));
+        const selCell = document.getElementById(cellId);
+        if (selCell) selCell.classList.add('selected');
         const dc = ['#e85d26', '#2563b0', '#2a7d4f', '#b86e00', '#6d3fa0'];
         const [y, m, d] = iso.split('-');
         const dateLabel = `${parseInt(d)} ${['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][parseInt(m)]} ${parseInt(y) + 543}`;
         if (!evts.length) {
             detail.innerHTML = `<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)">${dateLabel}</div><div style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">ไม่มีนัด</div>`;
-            document.getElementById('cal-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (scroll) document.getElementById('cal-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             return;
         }
         const rows = evts.map((e, j) => {
@@ -964,7 +969,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
       </div>`;
         }).join('');
         detail.innerHTML = `<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)">${dateLabel} · ${evts.length} นัด</div>${rows}`;
-        document.getElementById('cal-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (scroll) document.getElementById('cal-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function buildCalendar(bookings, sessions = []) {
@@ -1015,8 +1020,18 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
             ).join('');
             const cellId = 'cell-' + c.iso;
             _calCellData[cellId] = { iso: c.iso, evts };
-            return `<div class="cal-cell${isT ? ' today' : ''}${c.other ? ' other-month' : ''}" onclick="showCalDetail('${cellId}')" style="cursor:pointer"><div class="cal-day-num">${c.day}</div>${dots}${mobileDots}</div>`;
+            return `<div id="${cellId}" class="cal-cell${isT ? ' today' : ''}${c.other ? ' other-month' : ''}" onclick="showCalDetail('${cellId}')" style="cursor:pointer"><div class="cal-day-num">${c.day}</div>${dots}${mobileDots}</div>`;
         }).join('');
+
+        // เปิดหน้ามาแล้วโชว์นัดของวันนี้อัตโนมัติ (ถ้าวันนี้อยู่ในเดือนที่กำลังแสดง) โดยไม่เลื่อนจอ
+        const todayCellId = 'cell-' + todayIso;
+        if (_calCellData[todayCellId]) {
+            showCalDetail(todayCellId, false);
+        } else {
+            // ถ้าเปลี่ยนไปดูเดือนอื่นที่ไม่มีวันนี้ ให้กลับไปแสดงข้อความให้แตะเลือก
+            document.getElementById('cal-detail-inner').innerHTML =
+                '<div style="color:var(--muted);font-size:13px;text-align:center;padding:1.5rem">แตะวันในปฏิทินเพื่อดูนัด</div>';
+        }
     }
 
     async function submitBooking() {
@@ -1171,7 +1186,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         'Irene': ['Ireane'],
         'Kunanon': ['คุณานนท์(พี่แม็ก)'],
         'Kesinee': ['พี่เก๋(เกศสินี)', 'น้องเซฟ', 'แอเรียว&จิงเกอเบล'],
-        'Unakorn': ['อุณากร์(พี่ตุ๊ก)', 'แอเรียว&จิงเกอเบล'],
+        'Unakorn': ['อุณากรณ์(พี่ตุ๊ก)', 'แอเรียว&จิงเกอเบล'],
         'Phattharaseth': ['ภัทรเศรษฐ์(พี่บ๋อม) (พี่คราม)'],
         'Sukanya': ['สุกัญญา(พี่โอ๋&พี่เก๋)'],
         'Patcharee': ['พัชรี(พี่น้อง)'],
