@@ -509,7 +509,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         }
         if (APP_USERS[u] && APP_USERS[u] === p) {
             errEl.classList.remove('show');
-            try { sessionStorage.setItem('issara_auth_user', u); } catch (e) { }
+            try { localStorage.setItem('issara_auth_user', u); } catch (e) { }
             setSessionRole(u);
             showApp();
         } else {
@@ -520,12 +520,12 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(
         }
     }
     function doLogout() {
-        try { sessionStorage.removeItem('issara_auth_user'); } catch (e) { }
+        try { localStorage.removeItem('issara_auth_user'); } catch (e) { }
         location.reload();
     }
     (function checkExistingSession() {
         let savedUser = null;
-        try { savedUser = sessionStorage.getItem('issara_auth_user'); } catch (e) { }
+        try { savedUser = localStorage.getItem('issara_auth_user'); } catch (e) { }
         if (savedUser && APP_USERS[savedUser]) {
             setSessionRole(savedUser);
             document.addEventListener('DOMContentLoaded', showApp);
